@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Cache the runtime env script aggressively but allow updates on deploy
+[[headers]]
+  for = "/env-config.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# SPA fallback (Netlify also honors public/_redirects, this is a backup)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
