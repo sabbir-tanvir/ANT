@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "imageSrc": "https://placehold.co/220x140/png",
+    "storeName": "BD Store",
+    "name": "Ek Bakke Quran",
+    "price": 150,
+    "originalPrice": 200,
+    "inStock": false
+  },
+  {
+    "id": 2,
+    "imageSrc": "https://placehold.co/220x140/png",
+    "storeName": "BD Store",
+    "name": "Cleanser Liquid Detergent 500ml Super Fresh",
+    "price": 150,
+    "originalPrice": 200,
+    "inStock": true
+  },
+  {
+    "id": 3,
+    "imageSrc": "https://placehold.co/220x140/png",
+    "storeName": "BD Store",
+    "name": "Damp Remove & Cleaner",
+    "price": 150,
+    "originalPrice": 200,
+    "inStock": true
+  },
+  {
+    "id": 4,
+    "imageSrc": "https://placehold.co/220x140/png",
+    "storeName": "BD Store",
+    "name": "Brightener Liquid Blue",
+    "price": 150,
+    "originalPrice": 200,
+    "inStock": true
+  },
+  {
+    "id": 5,
+    "imageSrc": "https://placehold.co/220x140/png",
+    "storeName": "BD Store",
+    "name": "Dish Wash Liquid",
+    "price": 150,
+    "originalPrice": 200,
+    "inStock": true
+  },
+  {
+    "id": 6,
+    "imageSrc": "https://placehold.co/220x140/png",
+    "storeName": "BD Store",
+    "name": "Kitchen Cleaner",
+    "price": 150,
+    "originalPrice": 200,
+    "inStock": true
+  }
+]

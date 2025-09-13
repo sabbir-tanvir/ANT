@@ -1,0 +1,257 @@
+{
+  "shops": [
+    {
+      "id": 1,
+      "title": "Fresh Mart",
+      "subtitle": "Your local grocery hub",
+      "image": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400&h=400&fit=crop",
+      "link": "/shops/1",
+      "location": "Dhaka, Uttara",
+      "category": "Grocery"
+    },
+    {
+      "id": 2,
+      "title": "Tech Point",
+      "subtitle": "Gadgets and accessories",
+      "image": "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop",
+      "link": "/shops/2",
+      "location": "Dhaka, Dhanmondi",
+      "category": "Electronics"
+    },
+    {
+      "id": 3,
+      "title": "Style Hub",
+      "subtitle": "Trendy fashion store",
+      "image": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop",
+      "link": "/shops/3",
+      "location": "Chattogram, GEC",
+      "category": "Fashion"
+    },
+    {
+      "id": 4,
+      "title": "Book Nook",
+      "subtitle": "Books and stationery",
+      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+      "link": "/shops/4",
+      "location": "Dhaka, New Market",
+      "category": "Books"
+    },
+    {
+      "id": 5,
+      "title": "Anowar Chemical & Co.",
+      "subtitle": "Industrial chemicals supplier",
+      "image": "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=400&h=400&fit=crop",
+      "link": "/shops/5",
+      "location": "Dhaka, Uttara 12",
+      "category": "Industrial"
+    },
+    {
+      "id": 6,
+      "title": "Green Garden",
+      "subtitle": "Plants and gardening supplies",
+      "image": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop",
+      "link": "/shops/6",
+      "location": "Sylhet, Zindabazar",
+      "category": "Garden"
+    },
+    {
+      "id": 7,
+      "title": "Spice Bazaar",
+      "subtitle": "Authentic spices and herbs",
+      "image": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=400&fit=crop",
+      "link": "/shops/7",
+      "location": "Rajshahi, Court Para",
+      "category": "Food"
+    },
+    {
+      "id": 8,
+      "title": "Auto Parts Plus",
+      "subtitle": "Car parts and accessories",
+      "image": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=400&fit=crop",
+      "link": "/shops/8",
+      "location": "Khulna, Boyra",
+      "category": "Automotive"
+    }
+  ],
+    "products": [
+    {
+      "id": 1,
+      "name": "Luxury Cleanser",
+      "brand": "Cleanser",
+      "price": 20,
+      "rating": 4,
+      "image": "https://images.unsplash.com/photo-1589987607627-62a3b0d689dc?w=400&h=400&fit=crop",
+      "volume": "1000ml",
+      "size": "Big Size",
+      "shippedFrom": "Mirpur"
+    },
+    {
+      "id": 2,
+      "name": "Armani Perfume",
+      "brand": "Armani",
+      "price": 75,
+      "rating": 5,
+      "image": "https://images.unsplash.com/photo-1600185365483-26d7fbb8684f?w=400&h=400&fit=crop",
+      "volume": "800ml",
+      "size": "Medium Size",
+      "shippedFrom": "Uttara"
+    },
+    {
+      "id": 3,
+      "name": "Gucci Handbag",
+      "brand": "Gucci",
+      "price": 150,
+      "rating": 5,
+      "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+      "volume": "1000ml",
+      "size": "Big Size",
+      "shippedFrom": "Mirpur"
+    },
+    {
+      "id": 4,
+      "name": "Prada Sunglasses",
+      "brand": "Prada",
+      "price": 120,
+      "rating": 4,
+      "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+      "volume": "800ml",
+      "size": "Medium Size",
+      "shippedFrom": "Uttara"
+    },
+        {
+      "id": 5,
+      "name": "Gucci Handbag",
+      "brand": "Gucci",
+      "price": 150,
+      "rating": 5,
+      "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+      "volume": "1000ml",
+      "size": "Big Size",
+      "shippedFrom": "Mirpur"
+    },
+    {
+      "id": 6,
+      "name": "Prada Sunglasses",
+      "brand": "Prada",
+      "price": 120,
+      "rating": 4,
+      "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+      "volume": "800ml",
+      "size": "Medium Size",
+      "shippedFrom": "Uttara"
+    },
+        {
+      "id": 7,
+      "name": "Gucci Handbag",
+      "brand": "Gucci",
+      "price": 150,
+      "rating": 5,
+      "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+      "volume": "1000ml",
+      "size": "Big Size",
+      "shippedFrom": "Mirpur"
+    },
+    {
+      "id": 8,
+      "name": "Prada Sunglasses",
+      "brand": "Prada",
+      "price": 120,
+      "rating": 4,
+      "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+      "volume": "800ml",
+      "size": "Medium Size",
+      "shippedFrom": "Uttara"
+    },
+        {
+      "id": 9,
+      "name": "Gucci Handbag",
+      "brand": "Gucci",
+      "price": 150,
+      "rating": 5,
+      "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+      "volume": "1000ml",
+      "size": "Big Size",
+      "shippedFrom": "Mirpur"
+    },
+    {
+      "id": 10,
+      "name": "Prada Sunglasses",
+      "brand": "Prada",
+      "price": 120,
+      "rating": 4,
+      "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+      "volume": "800ml",
+      "size": "Medium Size",
+      "shippedFrom": "Uttara"
+    },
+        {
+      "id": 11,
+      "name": "Gucci Handbag",
+      "brand": "Gucci",
+      "price": 150,
+      "rating": 5,
+      "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+      "volume": "1000ml",
+      "size": "Big Size",
+      "shippedFrom": "Mirpur"
+    },
+    {
+      "id": 12,
+      "name": "Prada Sunglasses",
+      "brand": "Prada",
+      "price": 120,
+      "rating": 4,
+      "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+      "volume": "800ml",
+      "size": "Medium Size",
+      "shippedFrom": "Uttara"
+    }
+  ],
+  "reviews": [
+      {
+        "id": 1,
+        "avatar": "https://i.pravatar.cc/64?img=1",
+        "name": "Mohammed A.",
+        "role": "CEO, ABC",
+        "rating": 4,
+        "text": "This CRM has completely transformed the way we handle leads. The automation tools saved us hours every week, and the UI is incredibly user-friendly."
+      },
+      {
+        "id": 2,
+        "avatar": "https://i.pravatar.cc/64?img=2",
+        "name": "Rafiq Ul Haque",
+        "role": "HR, Azic",
+        "rating": 3,
+        "text": "Very powerful platform! It helped us streamline our customer communication and track every interaction. A few minor bugs, but support was quick to resolve them."
+      },
+      {
+        "id": 3,
+        "avatar": "https://i.pravatar.cc/64?img=3",
+        "name": "Abdullah Al Noman",
+        "role": "Businessman",
+        "rating": 4,
+        "text": "We've tried multiple CRM systems, but this one stands out with its customization features and team collaboration tools. Highly recommended for growing teams!"
+      }
+  ],
+  "contact": {
+    "location": {
+      "title": "Location",
+      "address": "House: 531/3(level-5), Road-11, Baridhara, DOHS, Dhaka"
+    },
+    "email": {
+      "title": "Email",
+      "addresses": [
+        "mag.3br@gmail.com",
+        "safecalibration@yahoo.com"
+      ]
+    },
+    "phone": {
+      "title": "Call",
+      "numbers": [
+        "+8801956956200",
+        "+88017********",
+        "+88017********"
+      ]
+    }
+  }
+}
