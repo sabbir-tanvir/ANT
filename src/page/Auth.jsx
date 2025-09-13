@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Api_Base_Url } from '../config/api.js';
 import { 
-  storeTokens, 
-  getUserRole, 
-  getUserId, 
-  isAuthenticated, 
+  storeTokens,
+  getUserRole,
+  getUserId,
+  isAuthenticated,
   getCurrentUser,
-  storeShopData
+  storeShopData,
+  loginUser,
+  registerUser,
+  verifySignupOTP,
+  resendSignupOTP,
+  fetchShopData,
+  updateUserProfile,
 } from '../utils/auth.js';
+import ForgotPassword from '../components/auth/ForgotPassword.jsx';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -27,6 +33,7 @@ export default function Auth() {
     confirmPassword: '',
     otp: ''
   });
+  const [showForgot, setShowForgot] = useState(false);
 
   // OTP Timer Effect
   useEffect(() => {
@@ -53,163 +60,87 @@ export default function Auth() {
     }
   }, []);
 
-  // API Functions
-  const loginUser = async (username, password) => {
+  // API functions moved to utils/auth.js
+
+  // Complete signup after OTP by logging in and optionally applying referral/reference phone
+  const completeSignupAfterOtp = async (referOverride = null) => {
     try {
-      const requestBody = {
-        username: username,
-        password: password
+      setLoading(true);
+      console.log('Completing registration. Logging in and applying referral (if any).');
+
+      // Log in with the same phone/password used for registration
+      const loginResp = await loginUser(formData.phone, formData.password);
+
+      // Store tokens
+      storeTokens({ access: loginResp.access, refresh: loginResp.refresh });
+
+      // Extract user info from token
+      const userId = getUserId(loginResp.access);
+      const userRole = getUserRole(loginResp.access);
+
+      // Build user object
+      const userData = {
+        id: userId,
+        phone: formData.phone,
+        role: userRole,
+        isLoggedIn: true,
+        accessToken: loginResp.access,
+        refreshToken: loginResp.refresh,
       };
-      
-      console.log('Login Request:', requestBody);
-      
-      const response = await fetch('https://admin.ant2025.com/auth/jwt-login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
 
-      const data = await response.json();
-      
-      console.log('Login Response Status:', response.status);
-      console.log('Login Response Data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || data.detail || 'Login failed');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Login Error:', error);
-      throw new Error(error.message || 'Network error occurred');
-    }
-  };
-
-  const registerUser = async (phone, password) => {
-    try {
-      const requestBody = {
-        phone: phone,
-        password: password
-      };
-      
-      console.log('Registration Request:', requestBody);
-      
-      const response = await fetch(`${Api_Base_Url}/auth/registration/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      const data = await response.json();
-      
-      console.log('Registration Response Status:', response.status);
-      console.log('Registration Response Data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Registration Error:', error);
-      throw new Error(error.message || 'Network error occurred');
-    }
-  };
-
-  const verifyOTP = async (phone, otp) => {
-    try {
-      const requestBody = {
-        mobile: phone,
-        otp: otp
-      };
-      
-      console.log('Verify OTP Request:', requestBody);
-      
-      const response = await fetch(`${Api_Base_Url}/auth/verify-otp/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      const data = await response.json();
-      
-      console.log('Verify OTP Response Status:', response.status);
-      console.log('Verify OTP Response Data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Verify OTP Error:', error);
-      throw new Error(error.message || 'Network error occurred');
-    }
-  };
-
-  const resendOTPAPI = async (phone) => {
-    try {
-      const requestBody = {
-        mobile: phone
-      };
-      
-      console.log('Resend OTP Request:', requestBody);
-      
-      const response = await fetch(`${Api_Base_Url}/auth/resend-otp/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      const data = await response.json();
-      
-      console.log('Resend OTP Response Status:', response.status);
-      console.log('Resend OTP Response Data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend OTP');
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Resend OTP Error:', error);
-      throw new Error(error.message || 'Network error occurred');
-    }
-  };
-
-  const fetchShopData = async (accessToken) => {
-    try {
-      console.log('Fetching shop data with token:', accessToken);
-      
-      const response = await fetch('https://admin.ant2025.com/api/my-shop/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+      // Optionally apply referral/reference phone if provided
+      const refer = referOverride !== null ? (referOverride || '').trim() : (formData.referCode || '').trim();
+      if (refer) {
+        try {
+          await updateUserProfile({ reference_phone: refer }, loginResp.access);
+          console.log('Referral/reference phone applied');
+        } catch (refErr) {
+          console.warn('Failed to set referral/reference phone:', refErr);
+          // Don't block signup on referral failure
         }
+      }
+
+      // Store user
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      // If shop owner, fetch and store shop data
+      if (userRole === 'shop_owner') {
+        try {
+          const shopResponse = await fetchShopData(loginResp.access);
+          if (shopResponse && shopResponse.shop) {
+            storeShopData(shopResponse.shop);
+          }
+        } catch (shopErr) {
+          console.error('Failed to fetch shop data after signup:', shopErr);
+        }
+      }
+
+      // Dispatch navbar update
+      window.dispatchEvent(new CustomEvent('userStatusChanged'));
+
+      // Reset form
+      setFormData({
+        email: '',
+        phone: '',
+        referCode: '',
+        password: '',
+        confirmPassword: '',
+        otp: ''
       });
 
-      const data = await response.json();
-      
-      console.log('Shop Data Response Status:', response.status);
-      console.log('Shop Data Response:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch shop data');
+      // Navigate by role
+      if (userRole === 'shop_owner') {
+        navigate('/myshop');
+      } else {
+        navigate('/');
       }
-      
-      return data;
-    } catch (error) {
-      console.error('Fetch Shop Data Error:', error);
-      throw new Error(error.message || 'Network error occurred');
+
+    } catch (finishErr) {
+      console.error('Signup completion error:', finishErr);
+      setError(finishErr.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -272,7 +203,7 @@ export default function Auth() {
       try {
         setLoading(true);
         console.log('Starting OTP verification with phone:', formData.phone, 'OTP:', formData.otp);
-        const response = await verifyOTP(formData.phone, formData.otp);
+  const response = await verifySignupOTP(formData.phone, formData.otp);
         
         console.log('OTP verified successfully:', response);
         
@@ -288,40 +219,8 @@ export default function Auth() {
       }
       
     } else if (activeTab === 'signup' && signupStep === 'referCode') {
-      // Complete registration (with or without refer code)
-      console.log('Completing registration with refer code:', formData.referCode || 'None');
-      
-      // Mock user data after successful registration
-      const userData = {
-        id: Date.now(),
-        phone: formData.phone,
-        name: 'User', // You can add name field to signup form if needed
-        referCode: formData.referCode || null,
-        isLoggedIn: true
-      };
-      
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Dispatch custom event for navbar update
-      window.dispatchEvent(new CustomEvent('userStatusChanged'));
-      
-      alert('Registration successful! You are now logged in.');
-      
-      // Redirect to home page after successful signup
-      navigate('/');
-      
-      // Reset form
-      setSignupStep('form');
-      setActiveTab('login');
-      setFormData({
-        email: '',
-        phone: '',
-        referCode: '',
-        password: '',
-        confirmPassword: '',
-        otp: ''
-      });
+      // Use helper to finish signup; it will optionally PATCH reference_phone
+      await completeSignupAfterOtp();
     }
   };
 
@@ -421,7 +320,7 @@ export default function Auth() {
         setError('');
         console.log('Resending OTP for phone:', formData.phone);
         
-        const response = await resendOTPAPI(formData.phone);
+  const response = await resendSignupOTP(formData.phone);
         console.log('OTP resent successfully:', response);
         
         setOtpTimer(40);
@@ -582,27 +481,6 @@ export default function Auth() {
                             </button>
                           </div>
 
-                          {/* Confirm Password Field */}
-                          {/* <div className="self-stretch px-4 md:px-6 py-3 bg-neutral-50 outline-1 outline-offset-[-1px] outline-stone-300 flex justify-between items-center overflow-hidden">
-                            <input
-                              type={showConfirmPassword ? 'text' : 'password'}
-                              name="confirmPassword"
-                              value={formData.confirmPassword}
-                              onChange={handleInputChange}
-                              placeholder="Confirm Password*"
-                              className="w-full bg-transparent text-sm md:text-base font-semibold font-['Inter'] leading-normal placeholder:text-neutral-400 focus:outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="w-5 h-5 md:w-6 md:h-6 relative cursor-pointer flex-shrink-0 ml-2"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <path d="M21.544 11.045C21.848 11.4713 22 11.6845 22 12C22 12.3155 21.848 12.5287 21.544 12.955C20.1779 14.8706 16.6892 19 12 19C7.31078 19 3.8221 14.8706 2.45604 12.955C2.15201 12.5287 2 12.3155 2 12C2 11.6845 2.15201 11.4713 2.45604 11.045C3.8221 9.12944 7.31078 5 12 5C16.6892 5 20.1779 9.12944 21.544 11.045Z" stroke="#9A9A9A" strokeWidth="1.5" />
-                                <path d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z" stroke="#9A9A9A" strokeWidth="1.5" />
-                              </svg>
-                            </button>
-                          </div> */}
                         </>
                       )}
 
@@ -695,11 +573,7 @@ export default function Auth() {
                           {/* Skip Button */}
                           <div className="text-center">
                             <button
-                              onClick={() => {
-                                // Skip refer code and complete registration
-                                setFormData(prev => ({...prev, referCode: ''}));
-                                handleSignupSubmit(new Event('submit'));
-                              }}
+                              onClick={() => completeSignupAfterOtp('')}
                               className="text-sm text-gray-600 hover:text-gray-800 font-semibold underline"
                             >
                               Skip this step
@@ -709,55 +583,12 @@ export default function Auth() {
                       )}
                     </div>
 
-                    {/* Password/OTP Section */}
-                    {/* <div className="self-stretch flex flex-col sm:flex-row justify-start items-center gap-4">
-                      <div className="w-full sm:flex-1 rounded flex justify-start items-center overflow-hidden">
-                        <button
-                          onClick={() => setAuthMethod('password')}
-                          className={`flex-1 px-4 md:px-6 py-3 flex justify-center items-center gap-2.5 overflow-hidden ${authMethod === 'password' ? 'bg-green-600' : 'bg-zinc-100'
-                            }`}
-                        >
-                          <div className={`justify-start text-sm md:text-base font-semibold font-['Inter'] leading-normal ${authMethod === 'password' ? 'text-white' : 'text-neutral-400'
-                            }`}>
-                            {activeTab === 'login' ? 'Password' : 'OTP'}
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => setAuthMethod('otp')}
-                          className={`flex-1 px-4 md:px-6 py-3 flex justify-center items-center gap-2.5 overflow-hidden ${authMethod === 'otp' ? 'bg-green-600' : 'bg-zinc-100'
-                            }`}
-                        >
-                          <div className={`justify-start text-sm md:text-base font-semibold font-['Inter'] leading-normal ${authMethod === 'otp' ? 'text-white' : 'text-neutral-400'
-                            }`}>
-                            {activeTab === 'login' ? 'OTP' : 'Password'}
-                          </div>
-                        </button>
-                      </div>
-                      <div className="w-full sm:flex-1 px-4 md:px-6 py-3 bg-neutral-50 outline-1 outline-offset-[-1px] outline-stone-300 flex justify-between items-center overflow-hidden">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder={`${authMethod === 'password' ? 'Password' : 'OTP'}*`}
-                          className="w-full bg-transparent text-sm md:text-base font-semibold font-['Inter'] leading-normal placeholder:text-neutral-400 focus:outline-none"
-                        />
-                        {authMethod === 'password' && (
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="w-5 h-5 md:w-6 md:h-6 relative cursor-pointer flex-shrink-0"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                              <path d="M21.544 11.045C21.848 11.4713 22 11.6845 22 12C22 12.3155 21.848 12.5287 21.544 12.955C20.1779 14.8706 16.6892 19 12 19C7.31078 19 3.8221 14.8706 2.45604 12.955C2.15201 12.5287 2 12.3155 2 12C2 11.6845 2.15201 11.4713 2.45604 11.045C3.8221 9.12944 7.31078 5 12 5C16.6892 5 20.1779 9.12944 21.544 11.045Z" stroke="#9A9A9A" stroke-width="1.5" />
-                              <path d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z" stroke="#9A9A9A" stroke-width="1.5" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    </div> */}
-
 
                   </div>
-                  <div className="self-stretch text-right justify-start text-neutral-400 text-sm md:text-base font-semibold font-['Inter'] underline leading-normal cursor-pointer">
-                    {activeTab === 'login' ? 'Forgot Your Password?' : ''}
+                  <div className="self-stretch text-right text-neutral-400 text-sm md:text-base font-semibold font-['Inter'] underline leading-normal cursor-pointer">
+                    {activeTab === 'login' ? (
+                      <button type="button" onClick={() => setShowForgot(true)} className="hover:text-gray-600">Forgot Your Password?</button>
+                    ) : ''}
                   </div>
                 </div>
               </div>
@@ -804,6 +635,9 @@ export default function Auth() {
 
         </div>
       </div>
+      {showForgot && (
+        <ForgotPassword onClose={() => setShowForgot(false)} onSuccess={() => setShowForgot(false)} />
+      )}
     </section>
   );
 }

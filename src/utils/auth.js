@@ -1,3 +1,4 @@
+
 // JWT utility functions for authentication
 
 /**
@@ -159,4 +160,113 @@ export const getCurrentUser = () => {
 export const isAuthenticated = () => {
   const tokens = getStoredTokens();
   return tokens && tokens.access && !isTokenExpired(tokens.access);
+};
+
+// ===== API helpers (moved from Auth.jsx) =====
+import { Api_Base_Url } from '../config/api';
+
+export const loginUser = async (username, password) => {
+  const requestBody = { username, password };
+  const res = await fetch(`${Api_Base_Url}/auth/jwt-login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || 'Login failed');
+  return data;
+};
+
+export const registerUser = async (phone, password) => {
+  const res = await fetch(`${Api_Base_Url}/auth/registration/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Registration failed');
+  return data;
+};
+
+export const verifySignupOTP = async (phone, otp) => {
+  const res = await fetch(`${Api_Base_Url}/auth/verify-otp/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mobile: phone, otp }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'OTP verification failed');
+  return data;
+};
+
+export const resendSignupOTP = async (phone) => {
+  const res = await fetch(`${Api_Base_Url}/auth/resend-otp/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mobile: phone }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to resend OTP');
+  return data;
+};
+
+export const fetchShopData = async (accessToken) => {
+  const res = await fetch(`${Api_Base_Url}/api/my-shop/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch shop data');
+  return data;
+};
+
+// Password reset
+export const requestPasswordReset = async (phone) => {
+  const res = await fetch(`${Api_Base_Url}/auth/password-reset/request/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.detail || data?.message || (data?.phone?.[0]) || 'Failed to request reset';
+    throw new Error(msg);
+  }
+  return data;
+};
+
+export const verifyPasswordReset = async ({ phone, otp, new_password, confirm_password }) => {
+  const res = await fetch(`${Api_Base_Url}/auth/password-reset/verify/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, otp, new_password, confirm_password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.detail || data?.message || 'Failed to reset password';
+    throw new Error(msg);
+  }
+  return data;
+};
+
+// Update user profile (PATCH /auth/user/)
+// Use to set referral/reference fields like reference_phone after registration
+export const updateUserProfile = async (partial, accessToken) => {
+  const res = await fetch(`${Api_Base_Url}/auth/user/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(partial),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.detail || data?.message || 'Failed to update profile';
+    throw new Error(msg);
+  }
+  return data;
 };

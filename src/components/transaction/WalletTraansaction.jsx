@@ -65,7 +65,7 @@ export default function WalletTransaction({ token }) {
 							<div className='flex items-center justify-between'>
 
 
-								<div className="text-gray-500 text-xs leading-snug">{tx.product_display}</div>
+								<div className="text-gray-500 font-bold text-sm leading-snug">{tx.product_display}</div>
 								<span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 uppercase tracking-wide">{tx.type || 'Wallet'}</span>
 
 
@@ -76,7 +76,7 @@ export default function WalletTransaction({ token }) {
 						</div>
 						<div className="text-[11px] text-gray-400 flex items-center justify-between">
 							<span>{tx.created_at}</span>
-							<span className="font-semibold text-gray-800">৳{tx.amount}</span>
+							<span className="font-semibold text-lg text-gray-800">৳{tx.amount}</span>
 
 						</div>
 					</div>

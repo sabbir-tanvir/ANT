@@ -7,10 +7,7 @@ export default function Hero() {
   // Fallback slides if API has no banners
   const fallbackSlides = useMemo(
     () => [
-      'https://images.unsplash.com/photo-1520072959219-c595dc870360?q=80&w=1600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?q=80&w=1600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=1600&auto=format&fit=crop'
-    ],
+      ],
     []
   );
 

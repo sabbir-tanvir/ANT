@@ -228,6 +228,13 @@ export default function Profile() {
   };
 
   const handleImageSelect = (e) => {
+    if (activeSection !== 'account') {
+      // Safety guard: do not allow selecting outside Account info
+      toast.info('You can change photo only in Account info.');
+      // Reset input value so the same file can be re-selected later
+      if (e.target) e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -414,11 +421,19 @@ export default function Profile() {
                 />
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-sm font-medium transition-opacity"
-                  disabled={uploadingImage}
+                  onClick={() => {
+                    if (activeSection !== 'account') {
+                      toast.info('You can change photo only in Account info.');
+                      return;
+                    }
+                    fileInputRef.current?.click();
+                  }}
+                  className={`absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-sm font-medium transition-opacity ${activeSection !== 'account' ? 'cursor-not-allowed' : ''}`}
+                  disabled={uploadingImage || activeSection !== 'account'}
                 >
-                  {uploadingImage ? 'Uploading...' : 'Change Photo'}
+                  {uploadingImage
+                    ? 'Uploading...'
+                    : (activeSection === 'account' ? 'Change Photo' : 'Go to Account info to change')}
                 </button>
                 <input
                   ref={fileInputRef}
@@ -428,7 +443,7 @@ export default function Profile() {
                   onChange={handleImageSelect}
                 />
               </div>
-              {imageFile && (
+              {imageFile && activeSection === 'account' && (
                 <p className="text-xs text-green-600 mt-1">New image selected (will save on update)</p>
               )}
             </div>

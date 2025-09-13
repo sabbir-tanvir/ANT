@@ -58,26 +58,33 @@ export default function TradeTransaction({ token }) {
 					</div>)}
 				{items.map((tx, idx) => {
 					const productName = tx.product_display?.split('|')?.[0]?.trim() || tx.product_display;
+					const productPrice = tx.product_display?.split('|')?.[1]?.trim() || tx.product_display;
+
 					const qty = tx.quantity ?? tx.qty ?? tx.product_qty ?? tx.count ?? null;
 					return (
 						<div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex flex-col gap-2 text-sm">
-							<div className="flex items-center justify-between">
-								<span className="font-semibold text-gray-800">{productName}</span>
-								<span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 uppercase tracking-wide">{tx.type || 'Trade'}</span>
-							</div>
+
 							<div className='flex items-center justify-between'>
-								<div className="text-gray-500 text-xs leading-snug">
-									{tx.product_display}
+								<div className="text-gray-500  leading-snug">
+									<span className='texxt-lg font-bold'>{productName} • </span>
+									<span>{productPrice}</span>
 									{qty ? <span className="text-gray-400"> • </span> : null}
 									{qty ? <span className="text-gray-600">Qty: {qty}</span> : null}
 								</div>
-								<span>Total: <strong className="text-gray-800">৳{tx.total_amount}</strong></span>
+								<span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 uppercase tracking-wide">{tx.type || 'Trade'}</span>
 
 							</div>
-
-							<div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+							<div className='flex items-center justify-between'>
+															<div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
 								{tx.seller_number && <span>Seller: {tx.seller_number}</span>}
 							</div>
+
+							<span>Total: <strong className="text-gray-800">৳{tx.total_amount}</strong></span>
+
+								
+							</div>
+
+
 							<div className="text-[11px] text-gray-400 flex items-center justify-between">
 								<span>{tx.created_at}</span>
 								{tx.shop_display && <span className="truncate max-w-[50%] text-right">{tx.shop_display}</span>}
