@@ -38,15 +38,7 @@ export default function CurrencyTransaction({ token }) {
 
 	return (
 		<div className="mb-10">
-			<div className="flex items-center justify-between mb-3">
-				<h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-					<span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-medium">Currency</span>
-					<span className="text-gray-500 font-normal">Transactions</span>
-				</h4>
-				<div className="flex items-center gap-2">
-					<button onClick={handleRefresh} className="text-xs px-3 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50">Refresh</button>
-				</div>
-			</div>
+
 
 			<div className="space-y-4">
 				{error && (
@@ -57,8 +49,13 @@ export default function CurrencyTransaction({ token }) {
 				)}
 
 				{!error && (
+			<div className="flex items-center justify-between mb-3">
 					<div className="text-xs text-gray-500">Total: {count}</div>
-				)}
+
+				<div className="flex items-center gap-2">
+					<button onClick={handleRefresh} className="text-xs px-3 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50">Refresh</button>
+				</div>
+			</div>				)}
 
 				{items.map((tx) => {
 					const actionRaw = (tx.action || '').toString();
@@ -69,7 +66,7 @@ export default function CurrencyTransaction({ token }) {
 					return (
 						<div key={tx.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex flex-col gap-2 text-sm">
 							<div className="flex items-center justify-between">
-								<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase tracking-wide">{actionLabel}</span>
+								<span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 uppercase tracking-wide">{actionLabel}</span>
 								<span className="font-semibold text-gray-800">৳{tx.amount}</span>
 							</div>
 							<div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-600">

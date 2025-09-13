@@ -7,6 +7,7 @@ import { Api_Base_Url } from '../config/api.js';
 import TradeTransaction from '../components/transaction/Tradetransaction.jsx';
 import WalletTransaction from '../components/transaction/WalletTraansaction.jsx';
 import CurrencyTransaction from '../components/transaction/CurrencyTransaction.jsx';
+import Myorders from '../components/orders/Myorders';
 
 export default function Profile() {
   const [user, setUser] = useState(null);           // Auth info (id, role, tokens)
@@ -510,7 +511,7 @@ export default function Profile() {
                 <div className="mb-8">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-black text-sm font-normal font-['Inter'] leading-tight">Phone Number</span>
-                    <span className="text-xs text-red-500">You can't update this</span>
+                    <span className="text-xs text-neutral-500">You can't update this</span>
                   </div>
                   <div className="w-full h-11 bg-gray-50 rounded-md border border-stone-300">
                     <input
@@ -529,9 +530,9 @@ export default function Profile() {
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-black text-sm font-normal font-['Inter'] leading-tight">Reference Phone</span>
                     { (originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? (
-                      <span className="text-xs text-green-600">Set (locked)</span>
+                      <span className="text-xs text-neutral-500">Set (locked)</span>
                     ) : (
-                      <span className="text-xs text-orange-600">Can be set only once</span>
+                      <span className="text-xs text-neutral-500">Can be set only once</span>
                     ) }
                   </div>
                   <div className={`w-full h-11 rounded-md border ${ (originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? 'bg-gray-50 border-stone-300' : 'bg-white border-stone-300' }`}>
@@ -617,161 +618,10 @@ export default function Profile() {
             )}
 
             {activeSection === 'orders' && (
-              <>
-                <div className="text-black text-2xl font-bold font-['Inter'] capitalize leading-7 mb-8">
-                  My Orders
-                </div>
-                
-                {/* Order Item */}
-                <div className="self-stretch h-72 relative bg-neutral-50 rounded-[10px] mb-6">
-                  {/* Product Image Container */}
-                  <div className="w-56 h-64 left-[16px] top-[16px] absolute bg-white rounded-[10px] overflow-hidden">
-                    <div className="w-56 h-64 left-0 top-0 absolute overflow-hidden">
-                      <img className="w-16 h-40 left-[75px] top-[44px] absolute" src="https://placehold.co/70x161" alt="Product" />
-                    </div>
-                  </div>
-                  
-                  {/* Product Details */}
-                  <div className="w-64 h-64 left-[256px] top-[16px] absolute">
-                    {/* Rating/Badge */}
-                    <div className="w-16 h-3 left-0 top-[38.25px] absolute justify-center text-amber-500 text-xs font-black font-['Inter'] leading-3"></div>
-                    
-                    {/* Product Name */}
-                    <div className="left-0 top-[62.50px] absolute justify-center text-black text-xl font-medium font-['Inter']">
-                      Cleanser Liquid Detergent
-                    </div>
-                    
-                    {/* Price */}
-                    <div className="w-20 h-5 left-0 top-[94.39px] absolute justify-center text-red-600 text-lg font-semibold font-['Inter'] leading-snug">
-                      150 TK
-                    </div>
-                    
-                    {/* Quantity Selector */}
-                    <div className="w-32 h-9 left-0 top-[132.28px] absolute rounded-[10px] border border-neutral-400/20">
-                      {/* Minus Button */}
-                      <div className="w-2 h-3.5 left-[21px] top-[11.25px] absolute">
-                        <div className="w-2.5 h-2.5 left-0 top-[2px] absolute justify-center text-black text-[10px] font-black font-['Font_Awesome_5_Pro'] leading-[10px]">-</div>
-                      </div>
-                      
-                      {/* Quantity Display */}
-                      <div className="w-16 h-5 left-[29.75px] top-[8px] absolute">
-                        <div className="w-16 h-5 left-[2px] top-[1px] absolute overflow-hidden">
-                          <div className="w-1.5 h-5 left-[29.86px] top-[-0.75px] absolute text-center justify-center text-black text-xs font-bold font-['Inter'] leading-tight">1</div>
-                        </div>
-                      </div>
-                      
-                      {/* Plus Button */}
-                      <div className="w-2 h-3.5 left-[99.75px] top-[11.25px] absolute">
-                        <div className="w-2.5 h-2.5 left-0 top-[2px] absolute justify-center text-black text-[10px] font-black font-['Font_Awesome_5_Pro'] leading-[10px]">+</div>
-                      </div>
-                    </div>
-                    
-                    {/* Free Shipping Badge */}
-                    <div className="w-24 h-5 left-0 top-[189.78px] absolute opacity-5 bg-green-600 rounded-md" />
-                    <div className="w-20 h-3.5 left-[10px] top-[192.28px] absolute justify-center text-green-600 text-[10px] font-medium font-['Inter'] uppercase leading-none">
-                      free shipping
-                    </div>
-                    
-                    {/* Stock Status */}
-                    <div className="w-3 h-3 left-0 top-[222.28px] absolute justify-center text-green-600 text-xs font-black font-['Font_Awesome_5_Pro'] leading-3">•</div>
-                    <div className="w-12 h-5 left-[16px] top-[218.08px] absolute justify-center text-black text-xs font-normal font-['Inter'] leading-tight">
-                      In stock
-                    </div>
-                  </div>
-                  
-                  {/* Save Badge */}
-                  <div className="w-20 h-10 left-[16px] top-[16px] absolute bg-green-600 rounded-md">
-                    <div className="w-6 h-3.5 left-[10px] top-[5px] absolute justify-center text-white text-[10px] font-normal font-['Inter'] uppercase leading-none">
-                      save
-                    </div>
-                    <div className="w-14 h-4 left-[10px] top-[20px] absolute justify-center text-white text-sm font-medium font-['Inter'] leading-none">
-                      50TK
-                    </div>
-                  </div>
-                  
-                  {/* Delete Button */}
-                  <div className="w-6 h-6 left-[713px] top-[79px] absolute cursor-pointer">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Second Order Item */}
-                <div className="self-stretch h-72 relative bg-neutral-50 rounded-[10px]">
-                  {/* Product Image Container */}
-                  <div className="w-56 h-64 left-[16px] top-[16px] absolute bg-white rounded-[10px] overflow-hidden">
-                    <div className="w-56 h-64 left-0 top-0 absolute overflow-hidden">
-                      <img className="w-16 h-40 left-[75px] top-[44px] absolute" src="https://placehold.co/70x161" alt="Product" />
-                    </div>
-                  </div>
-                  
-                  {/* Product Details */}
-                  <div className="w-64 h-64 left-[256px] top-[16px] absolute">
-                    {/* Rating/Badge */}
-                    <div className="w-16 h-3 left-0 top-[38.25px] absolute justify-center text-amber-500 text-xs font-black font-['Inter'] leading-3"></div>
-                    
-                    {/* Product Name */}
-                    <div className="left-0 top-[62.50px] absolute justify-center text-black text-xl font-medium font-['Inter']">
-                      Cleanser Liquid Detergent
-                    </div>
-                    
-                    {/* Price */}
-                    <div className="w-20 h-5 left-0 top-[94.39px] absolute justify-center text-red-600 text-lg font-semibold font-['Inter'] leading-snug">
-                      150 TK
-                    </div>
-                    
-                    {/* Quantity Selector */}
-                    <div className="w-32 h-9 left-0 top-[132.28px] absolute rounded-[10px] border border-neutral-400/20">
-                      {/* Minus Button */}
-                      <div className="w-2 h-3.5 left-[21px] top-[11.25px] absolute">
-                        <div className="w-2.5 h-2.5 left-0 top-[2px] absolute justify-center text-black text-[10px] font-black font-['Font_Awesome_5_Pro'] leading-[10px]">-</div>
-                      </div>
-                      
-                      {/* Quantity Display */}
-                      <div className="w-16 h-5 left-[29.75px] top-[8px] absolute">
-                        <div className="w-16 h-5 left-[2px] top-[1px] absolute overflow-hidden">
-                          <div className="w-1.5 h-5 left-[29.86px] top-[-0.75px] absolute text-center justify-center text-black text-xs font-bold font-['Inter'] leading-tight">1</div>
-                        </div>
-                      </div>
-                      
-                      {/* Plus Button */}
-                      <div className="w-2 h-3.5 left-[99.75px] top-[11.25px] absolute">
-                        <div className="w-2.5 h-2.5 left-0 top-[2px] absolute justify-center text-black text-[10px] font-black font-['Font_Awesome_5_Pro'] leading-[10px]">+</div>
-                      </div>
-                    </div>
-                    
-                    {/* Free Shipping Badge */}
-                    <div className="w-24 h-5 left-0 top-[189.78px] absolute opacity-5 bg-green-600 rounded-md" />
-                    <div className="w-20 h-3.5 left-[10px] top-[192.28px] absolute justify-center text-green-600 text-[10px] font-medium font-['Inter'] uppercase leading-none">
-                      free shipping
-                    </div>
-                    
-                    {/* Stock Status */}
-                    <div className="w-3 h-3 left-0 top-[222.28px] absolute justify-center text-green-600 text-xs font-black font-['Font_Awesome_5_Pro'] leading-3">•</div>
-                    <div className="w-12 h-5 left-[16px] top-[218.08px] absolute justify-center text-black text-xs font-normal font-['Inter'] leading-tight">
-                      In stock
-                    </div>
-                  </div>
-                  
-                  {/* Save Badge */}
-                  <div className="w-20 h-10 left-[16px] top-[16px] absolute bg-green-600 rounded-md">
-                    <div className="w-6 h-3.5 left-[10px] top-[5px] absolute justify-center text-white text-[10px] font-normal font-['Inter'] uppercase leading-none">
-                      save
-                    </div>
-                    <div className="w-14 h-4 left-[10px] top-[20px] absolute justify-center text-white text-sm font-medium font-['Inter'] leading-none">
-                      50TK
-                    </div>
-                  </div>
-                  
-                  {/* Delete Button */}
-                  <div className="w-6 h-6 left-[713px] top-[79px] absolute cursor-pointer">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                </div>
-              </>
+              <div>
+                <div className="text-black text-2xl font-bold font-['Inter'] capitalize leading-7 mb-6">My Orders</div>
+                <Myorders />
+              </div>
             )}
 
             {activeSection === 'transactions' && (
@@ -785,17 +635,17 @@ export default function Profile() {
                       type="button"
                       onClick={() => setTransactionTab('trade')}
                       className={`px-4 py-2 text-sm font-medium transition ${transactionTab==='trade' ? 'bg-green-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
-                    >Trade</button>
+                    >Buying History</button>
                     <button
                       type="button"
                       onClick={() => setTransactionTab('wallet')}
                       className={`px-4 py-2 text-sm font-medium transition border-l border-gray-200 ${transactionTab==='wallet' ? 'bg-green-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
-                    >Wallet</button>
+                    >Bonus History</button>
                     <button
                       type="button"
                       onClick={() => setTransactionTab('currency')}
                       className={`px-4 py-2 text-sm font-medium transition border-l border-gray-200 ${transactionTab==='currency' ? 'bg-green-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
-                    >Currency</button>
+                    >Transaction History</button>
                   </div>
                 </div>
                 {transactionTab === 'trade' && (

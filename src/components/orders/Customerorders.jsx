@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Api_Base_Url } from '../../config/api';
 import { getCurrentUser } from '../../utils/auth';
 
-export default function Myorders() {
+export default function Customerorders() {
 	const [items, setItems] = useState([]);
 	const [count, setCount] = useState(0);
 	const [next, setNext] = useState(null);
@@ -13,13 +13,51 @@ export default function Myorders() {
 
 	const token = useMemo(() => getCurrentUser()?.accessToken || '', []);
 
+	const fetchData = async (pg = 1) => {
+		try {
+			setLoading(true);
+			setError('');
+			const url = `${Api_Base_Url}/api/shop-customer-orders/?page=${pg}`;
+			const res = await axios.get(url, {
+				headers: token ? { Authorization: `Bearer ${token}` } : {},
+			});
+
+			const data = res.data;
+			if (data && Array.isArray(data.results)) {
+				setItems(data.results);
+				setCount(data.count || data.results.length || 0);
+				setNext(data.next || null);
+			} else if (Array.isArray(data)) {
+				setItems(data);
+				setCount(data.length);
+				setNext(null);
+			} else {
+				setItems([]);
+				setCount(0);
+				setNext(null);
+			}
+		} catch (err) {
+			const msg = err?.response?.data?.detail || err?.message || 'Failed to load customer orders';
+			setError(msg);
+			setItems([]);
+			setCount(0);
+			setNext(null);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchData(page);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [page]);
+
 	const fallbackImg = '/ant.png';
 
 	const resolveImg = (u) => {
 		if (!u) return fallbackImg;
 		if (typeof u !== 'string') return fallbackImg;
 		if (u.startsWith('http://') || u.startsWith('https://')) return u;
-		// handle relative paths from API
 		const needsSlash = !(Api_Base_Url.endsWith('/') || u.startsWith('/'));
 		return `${Api_Base_Url}${needsSlash ? '/' : ''}${u}`;
 	};
@@ -40,51 +78,13 @@ export default function Myorders() {
 		}
 		return fallbackImg;
 	};
-	const fetchData = async (pg = 1) => {
-		try {
-			setLoading(true);
-			setError('');
-			const url = `${Api_Base_Url}/api/shop-orders/?page=${pg}`;
-			const res = await axios.get(url, {
-				headers: token ? { Authorization: `Bearer ${token}` } : {},
-			});
-
-			const data = res.data;
-			if (data && Array.isArray(data.results)) {
-				setItems(data.results);
-				setCount(data.count || data.results.length || 0);
-				setNext(data.next || null);
-			} else if (Array.isArray(data)) {
-				setItems(data);
-				setCount(data.length);
-				setNext(null);
-			} else {
-				setItems([]);
-				setCount(0);
-				setNext(null);
-			}
-		} catch (err) {
-			const msg = err?.response?.data?.detail || err?.message || 'Failed to load my orders';
-			setError(msg);
-			setItems([]);
-			setCount(0);
-			setNext(null);
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		fetchData(page);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [page]);
 
 	const refresh = () => fetchData(page);
 
 	return (
 		<div>
 			<div className="flex items-center justify-between mb-4">
-				<h3 className="text-lg font-semibold text-gray-900">My Orders ({count})</h3>
+				<h3 className="text-lg font-semibold text-gray-900">Customer Orders ({count})</h3>
 				<button onClick={refresh} className="inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm">Refresh</button>
 			</div>
 
@@ -120,22 +120,21 @@ export default function Myorders() {
 										<p className="text-sm text-gray-500">{o.shop_name}</p>
 										<h4 className="text-base font-semibold text-gray-900 truncate">{o.product_name}</h4>
 										<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-											<span>Qty: {o.quantity}</span>
-											<span className="text-gray-300">•</span>
-											<span>MRP: ৳{o.product_mrp}</span>
-											{o.order_status && (
-												<>
-													<span className="text-gray-300">•</span>
-													<span className="capitalize">{o.order_status}</span>
-												</>
+											{o.customer_name && <span>{o.customer_name}</span>}
+											{o.customer_phone && <span className="text-gray-400">•</span>}
+											{o.customer_phone && (
+												<a href={`tel:${o.customer_phone}`} className="text-gray-600 hover:underline">
+													{o.customer_phone}
+												</a>
 											)}
 										</div>
 									</div>
 									<div className="text-right">
-										<div className="text-green-600 font-bold">৳{o.total_price}</div>
-										<div className="text-xs text-gray-500">{new Date(o.order_date).toLocaleString()}</div>
+										<div className="text-green-600 font-bold">৳{o.total_amount ?? o.product_mrp}</div>
+										<div className="text-xs text-gray-500">Qty: {o.quantity}</div>
 									</div>
 								</div>
+								<div className="text-xs text-gray-400 mt-1">{new Date(o.created_at).toLocaleString()}</div>
 							</div>
 						</li>
 					))}

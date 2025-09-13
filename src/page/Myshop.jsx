@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { getStoredShopData, getCurrentUser } from '../utils/auth.js';
 import axios from 'axios';
 import { Api_Base_Url } from '../config/api';
+import Myorders from '../components/orders/Myorders';
+import Customerorders from '../components/orders/Customerorders';
 
 function Myshop() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeOrdersTab, setActiveOrdersTab] = useState('customer');
   const [shopData, setShopData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -342,7 +345,9 @@ function Myshop() {
                           <span>📍 {shopData?.address || 'Address not available'}</span>
                           <span>⭐ 4.8 (152 reviews)</span>
                           {shopData?.owner_phone && (
-                            <span>📞 {shopData.owner_phone}</span>
+                            <a href={`tel:${shopData.owner_phone}`} className="hover:underline">
+                              📞 {shopData.owner_phone}
+                            </a>
                           )}
                         </div>
                         {shopData && (
@@ -526,7 +531,7 @@ function Myshop() {
                           <div className="flex space-x-2">
                             <button 
                               onClick={() => navigate(`/shop-products/${product.id}`)}
-                              className="w-full bg-blue-50 text-blue-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                              className="w-full inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm"
                             >
                               View Details
                             </button>
@@ -570,13 +575,24 @@ function Myshop() {
 
           {activeTab === 'orders' && (
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Orders</h2>
-              <div className="text-center py-12">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-gray-600">Order management coming soon...</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Orders</h2>
+              <div className="flex gap-2 mb-4 overflow-x-auto">
+                {/* Sub-tabs for orders */}
+                <button
+                  onClick={() => setActiveOrdersTab('customer')}
+                  className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition-colors ${activeOrdersTab === 'customer' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-black border-green-600 hover:bg-black/5'}`}
+                >
+                  Customer Orders
+                </button>
+                <button
+                  onClick={() => setActiveOrdersTab('my')}
+                  className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition-colors ${activeOrdersTab === 'my' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-black border-green-600 hover:bg-black/5'}`}
+                >
+                  My Orders
+                </button>
               </div>
+
+              {activeOrdersTab === 'customer' ? <Customerorders /> : <Myorders />}
             </div>
           )}
 

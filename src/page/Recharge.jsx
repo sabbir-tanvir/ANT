@@ -26,6 +26,7 @@ export default function Recharge() {
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
   const holdTimerRef = useRef(null);
   const holdStartRef = useRef(null);
+  const holdActionRef = useRef(null); // callback to execute after successful hold
   const HOLD_DURATION = 3000; // ms to complete hold
   const PROGRESS_RADIUS = 54; // matches the SVG circle r
   const CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
@@ -53,7 +54,7 @@ export default function Recharge() {
   };
 
   const submitCashIn = async (e) => {
-  e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     setError('');
 
     // basic validation
@@ -192,18 +193,35 @@ export default function Recharge() {
   };
 
   // Open the hold-to-confirm overlay (validates basic inputs first)
-  const openHoldOverlay = (e) => {
-    if (e) e.preventDefault();
+  const openHoldOverlay = (mode, e) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     setError('');
 
-    if (!sendForm.account || !sendForm.amount) {
-      setError('Please provide account number and amount.');
-      return;
-    }
-    const phoneOnly = sendForm.account.replace(/\D/g, '');
-    if (phoneOnly.length < 10) {
-      setError('Please enter a valid receiver phone number.');
-      return;
+    if (mode === 'cashin') {
+      // validate Cash In form
+      if (!cashInForm.account || !cashInForm.amount) {
+        setError('Please provide account number and amount.');
+        return;
+      }
+      const phoneOnly = cashInForm.account.replace(/\D/g, '');
+      if (phoneOnly.length < 10) {
+        setError('Please enter a valid receiver phone number.');
+        return;
+      }
+      // set action to Cash In submit
+      holdActionRef.current = () => submitCashIn();
+    } else {
+      // default: topup (send)
+      if (!sendForm.account || !sendForm.amount) {
+        setError('Please provide account number and amount.');
+        return;
+      }
+      const phoneOnly = sendForm.account.replace(/\D/g, '');
+      if (phoneOnly.length < 10) {
+        setError('Please enter a valid receiver phone number.');
+        return;
+      }
+      holdActionRef.current = () => performTopUp();
     }
 
     // Reset and show overlay
@@ -237,8 +255,18 @@ export default function Recharge() {
         holdTimerRef.current = null;
   setShowHold(false);
   try { if (navigator && 'vibrate' in navigator) navigator.vibrate(30); } catch { /* ignore */ }
-        // Trigger the Top Up after successful hold
-        performTopUp();
+        // Trigger action after successful hold (support async without await here)
+        const action = holdActionRef.current;
+        if (typeof action === 'function') {
+          try {
+            const maybePromise = action();
+            if (maybePromise && typeof maybePromise.then === 'function') {
+              maybePromise.catch(() => {});
+            }
+          } catch {
+            // ignore
+          }
+        }
       }
     }, 30);
   };
@@ -259,8 +287,7 @@ export default function Recharge() {
   }, []);
 
   const submitSend = (e) => {
-    e.preventDefault();
-    openHoldOverlay();
+    openHoldOverlay('topup', e);
   };
 
   return (
@@ -313,7 +340,7 @@ export default function Recharge() {
           )}
 
           {activeTab === 'cashin' ? (
-            <form onSubmit={submitCashIn} className="space-y-3">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-3">
               {/* Account Number */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Account Number</label>
@@ -378,7 +405,8 @@ export default function Recharge() {
               </div>
 
               <button
-                type="submit"
+                type="button"
+                onClick={(e) => openHoldOverlay('cashin', e)}
                 disabled={submitting}
                 className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:bg-green-400"
               >
@@ -420,7 +448,7 @@ export default function Recharge() {
 
               <button
                 type="button"
-                onClick={openHoldOverlay}
+                onClick={(e) => openHoldOverlay('topup', e)}
                 disabled={submitting}
                 className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:bg-green-400"
               >

@@ -46,44 +46,44 @@ export default function ProductCard({
 
       {/* Content Section - Takes 1/3 of the space */}
       <div className={compact ? 'p-3 flex flex-col gap-2' : 'p-4 flex flex-col gap-3'}>
-        {/* Product Name - Max 2 lines with ellipsis */}
-        <h3
-          className={compact ? 'text-sm font-semibold text-gray-900 text-center leading-tight' : 'text-base font-semibold text-gray-900 text-center leading-tight'}
-          style={{ 
-            display: '-webkit-box', 
-            WebkitLineClamp: 2, 
-            WebkitBoxOrient: 'vertical', 
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}
-          title={name}
-        >
-          {name}
-        </h3>
-
-        {(brand || category) && (
-          <div className="flex flex-col items-center gap-0.5 -mt-1">
-            {brand && <span className="text-[11px] tracking-wide uppercase text-gray-500 font-medium">{brand}</span>}
-            {category && <span className="text-[11px] text-gray-400">{category}</span>}
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="text-center">
-          <div className={compact ? 'text-lg font-bold text-green-600' : 'text-xl font-bold text-green-600'}>
+        {/* Title + Price row */}
+        <div className="flex items-start justify-between gap-3">
+          <h3
+            className={compact ? 'flex-1 text-sm font-semibold text-gray-900 leading-tight text-left' : 'flex-1 text-base font-semibold text-gray-900 leading-tight text-left'}
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+            title={name}
+          >
+            {name}
+          </h3>
+          <div className={compact ? 'text-lg font-bold text-green-600 whitespace-nowrap' : 'text-xl font-bold text-green-600 whitespace-nowrap'}>
             ৳{price}
           </div>
         </div>
 
+        {(brand || category) && (
+          <div className="flex items-center gap-2 text-left">
+            {brand && <span className="text-[11px] tracking-wide uppercase text-gray-500 font-medium">{brand}</span>}
+            {brand && category && <span className="text-gray-300">•</span>}
+            {category && <span className="text-[11px] text-gray-400">{category}</span>}
+          </div>
+        )}
+
   {/* View Button */}
-        <div className="mt-1 space-y-2">
+  <div className="mt-2 flex flex-col md:flex-row gap-3">
+          {/* View Details button (outlined white) */}
           {to ? (
             <Link
               to={to}
               className={
                 compact
-                  ? 'w-full inline-flex items-center justify-center rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 transition-colors shadow-sm'
-                  : 'w-full inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm'
+                  ? 'w-full md:flex-1 inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-black/5 transition-colors shadow-sm'
+                  : 'w-full md:flex-1 inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm'
               }
               aria-label={`View ${name}`}
             >
@@ -95,31 +95,28 @@ export default function ProductCard({
               onClick={onView}
               className={
                 compact
-                  ? 'w-full inline-flex items-center justify-center rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 transition-colors shadow-sm'
-                  : 'w-full inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm'
+                  ? 'w-full md:flex-1 inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-3 py-2 text-xs font-semibold text-black hover:bg-black/5 transition-colors shadow-sm'
+                  : 'w-full md:flex-1 inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm'
               }
               aria-label={`View ${name}`}
             >
               View Details
             </button>
           )}
-          
-          {/* Order Button for Shop Owners */}
+
+          {/* Buy now button (solid black) for shop owners */}
           {showOrderButton && onOrder && (
             <button
               type="button"
               onClick={() => onOrder(product || { id: Date.now(), name, price, brand, category, image: imageSrc })}
               className={
                 compact
-                  ? 'w-full inline-flex items-center justify-center rounded-lg bg-amber-950 px-3 py-2 text-xs font-semibold text-white  transition-colors shadow-sm'
-                  : 'w-full inline-flex items-center justify-center rounded-lg bg-amber-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition-colors shadow-sm'
+                  ? 'w-full md:flex-1 inline-flex items-center justify-center rounded-full bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 transition-colors shadow-sm'
+                  : 'w-full md:flex-1 inline-flex items-center justify-center rounded-full bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm'
               }
               aria-label={`Order ${name}`}
             >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293a1 1 0 001.414 1.414L7 16m0-3a2 2 0 11-4 0 2 2 0 014 0zm2 3h10a2 2 0 100-4H9a2 2 0 100 4z" />
-              </svg>
-              Order Now
+              Buy now
             </button>
           )}
         </div>
