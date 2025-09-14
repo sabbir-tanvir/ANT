@@ -419,7 +419,7 @@ export default function ShopDetails() {
                         <img
                           src={product.image || '/api/placeholder/300/300'}
                           alt={product.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           onError={(e) => {
                             e.target.src = '/api/placeholder/300/300';
                           }}

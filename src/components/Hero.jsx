@@ -1,9 +1,13 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from './productCard.jsx';
 import { Api_Base_Url } from '../config/api.js';
 
 export default function Hero() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Fallback slides if API has no banners
   const fallbackSlides = useMemo(
     () => [
@@ -90,7 +94,18 @@ export default function Hero() {
     };
     load();
     return () => { cancelled = true; };
-  }, []); // Api_Base_Url is static config
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to Product page and pass search via state
+      navigate('/product', { state: { searchQuery: searchQuery.trim() } });
+    } else {
+      // Navigate to Product page without search
+      navigate('/product');
+    }
+  };
 
   const [products, setProducts] = useState([]);
   useEffect(() => {
@@ -123,10 +138,12 @@ export default function Hero() {
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 py-10">
         {/* search */}
         <div className="mx-auto max-w-3xl">
-          <form onSubmit={(e) => e.preventDefault()} className="flex overflow-hidden rounded-md border border-green-600">
+          <form onSubmit={handleSearch} className="flex overflow-hidden rounded-md border border-green-600">
             <input
               type="text"
               placeholder="Search anything"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-3 outline-none"
             />
             <button type="submit" className="bg-green-600 px-4 text-white">

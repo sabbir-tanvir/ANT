@@ -73,7 +73,12 @@ export default function NearbyShop() {
                     {[shop.upazila_name, shop.district_name, shop.division_name].filter(Boolean).join(', ')}
                   </p>
                   {shop.owner_phone && (
-                    <p className="text-xs text-green-600 mt-1">📞 {shop.owner_phone}</p>
+                    <a 
+                      href={`tel:${shop.owner_phone}`}
+                      className="text-xs text-green-600 mt-1 inline-block hover:text-green-700 transition-colors"
+                    >
+                      📞 {shop.owner_phone}
+                    </a>
                   )}
                 </div>
                 <div>

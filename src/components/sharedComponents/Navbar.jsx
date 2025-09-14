@@ -45,6 +45,7 @@ function Navbar() {
   // Dynamic navigation items based on user role
   const getNavItems = () => {
     const baseItems = [
+      { label: 'Training', to: '/training' },
       { label: 'About', to: '/about' },
       { label: 'Contact', to: '/contact' },
     ];
@@ -62,7 +63,7 @@ function Navbar() {
     if (user.role === 'shop_owner') {
       // Shop owner navigation
       return [
-        { label: 'Home', to: '/home2' },
+        { label: 'Home', to: '/' },
         { label: 'Product', to: '/product' },
         { label: 'Recharge', to: '/recharge' },
         { label: 'My Shop', to: '/myshop' },

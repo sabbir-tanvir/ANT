@@ -12,12 +12,13 @@ export default function ProductDetails() {
     const [_selectedVolume, _setSelectedVolume] = useState('800ml');
     const [_quantity, _setQuantity] = useState(1);
     const [userRole, setUserRole] = useState(null);
-    
+    const [showDescription, setShowDescription] = useState(false);
+
     // Order functionality states
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [orderLoading, setOrderLoading] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    
+
     const params = useParams();
     const navigate = useNavigate();
 
@@ -116,10 +117,10 @@ export default function ProductDetails() {
             // Get shop data from localStorage
             const shopDataRaw = localStorage.getItem('shopData');
             console.log('🏪 [ProductDetails.jsx] Raw shop data from localStorage:', shopDataRaw);
-            
+
             const shopData = JSON.parse(shopDataRaw || '{}');
             console.log('🏪 [ProductDetails.jsx] Parsed shop data:', shopData);
-            
+
             const shop_id = shopData.id;
             console.log('🆔 [ProductDetails.jsx] Extracted shop_id:', shop_id);
 
@@ -138,7 +139,7 @@ export default function ProductDetails() {
 
             console.log('📦 [ProductDetails.jsx] Order payload prepared:', orderData);
             console.log('📦 [ProductDetails.jsx] Payload format: shop (not shop_id), product (not product_id)');
-            
+
             const endpoint = `${Api_Base_Url}/api/shop-orders/`;
             console.log('🌐 [ProductDetails.jsx] API Endpoint:', endpoint);
             console.log('🔑 [ProductDetails.jsx] Access Token:', currentUser.accessToken ? 'Present' : 'Missing');
@@ -187,7 +188,7 @@ export default function ProductDetails() {
             console.error('💥 [ProductDetails.jsx] Error object:', error);
             console.error('💥 [ProductDetails.jsx] Error message:', error.message);
             console.error('💥 [ProductDetails.jsx] Error stack:', error.stack);
-            
+
             if (error.response) {
                 console.error('📡 [ProductDetails.jsx] Error Response Status:', error.response.status);
                 console.error('📡 [ProductDetails.jsx] Error Response Headers:', error.response.headers);
@@ -225,7 +226,7 @@ export default function ProductDetails() {
                         } else if (error.response.data.detail) {
                             errorMessage = error.response.data.detail;
                         } else if (error.response.data.non_field_errors) {
-                            errorMessage = Array.isArray(error.response.data.non_field_errors) 
+                            errorMessage = Array.isArray(error.response.data.non_field_errors)
                                 ? error.response.data.non_field_errors.join(', ')
                                 : error.response.data.non_field_errors;
                         } else if (Array.isArray(error.response.data)) {
@@ -293,10 +294,10 @@ export default function ProductDetails() {
             // Get shop data from localStorage
             const shopDataRaw = localStorage.getItem('shopData');
             console.log('🏪 [ProductDetails.jsx] Raw shop data from localStorage:', shopDataRaw);
-            
+
             const shopData = JSON.parse(shopDataRaw || '{}');
             console.log('🏪 [ProductDetails.jsx] Parsed shop data:', shopData);
-            
+
             const shop_id = shopData.id;
             console.log('🆔 [ProductDetails.jsx] Extracted shop_id:', shop_id);
 
@@ -315,7 +316,7 @@ export default function ProductDetails() {
 
             console.log('📦 [ProductDetails.jsx] Order payload prepared:', orderData);
             console.log('📦 [ProductDetails.jsx] Payload format: shop_id, product_id (original format)');
-            
+
             const endpoint = `${Api_Base_Url}/api/place-order/`;
             console.log('🌐 [ProductDetails.jsx] API Endpoint:', endpoint);
             console.log('🔑 [ProductDetails.jsx] Access Token:', currentUser.accessToken ? 'Present' : 'Missing');
@@ -366,7 +367,7 @@ export default function ProductDetails() {
             console.error('💥 [ProductDetails.jsx] Error object:', error);
             console.error('💥 [ProductDetails.jsx] Error message:', error.message);
             console.error('💥 [ProductDetails.jsx] Error stack:', error.stack);
-            
+
             if (error.response) {
                 console.error('📡 [ProductDetails.jsx] Error Response Status:', error.response.status);
                 console.error('📡 [ProductDetails.jsx] Error Response Headers:', error.response.headers);
@@ -404,7 +405,7 @@ export default function ProductDetails() {
                         } else if (error.response.data.detail) {
                             errorMessage = error.response.data.detail;
                         } else if (error.response.data.non_field_errors) {
-                            errorMessage = Array.isArray(error.response.data.non_field_errors) 
+                            errorMessage = Array.isArray(error.response.data.non_field_errors)
                                 ? error.response.data.non_field_errors.join(', ')
                                 : error.response.data.non_field_errors;
                         } else if (Array.isArray(error.response.data)) {
@@ -646,7 +647,7 @@ export default function ProductDetails() {
                                                 </button>
                                             </div>
                                         </div>
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={handleDirectOrder}
                                             disabled={orderLoading}
@@ -681,11 +682,30 @@ export default function ProductDetails() {
 
                                 {/* Description */}
                                 {product?.description && (
-                                    <div className="mt-6">
-                                        <div
-                                            className="[&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2"
-                                            dangerouslySetInnerHTML={{ __html: product.description }}
-                                        />
+                                    <div className="mt-6 pt-6 border-t border-gray-200">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-lg font-semibold text-gray-900">Product Description</h3>
+                                            <button
+                                                onClick={() => setShowDescription(!showDescription)}
+                                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                                            >
+                                                <span>{showDescription ? 'Hide' : 'Show'} Details</span>
+                                                <svg 
+                                                    className={`w-4 h-4 transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`}
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        {showDescription && (
+                                            <div
+                                                className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 animate-fadeIn"
+                                                dangerouslySetInnerHTML={{ __html: product.description }}
+                                            />
+                                        )}
                                     </div>
                                 )}
 
@@ -778,29 +798,7 @@ export default function ProductDetails() {
                         </div>
  */}
 
-
                     </div>
-                </div>
-
-                {/* Specification and Summary */}
-                <div className="bg-white rounded-lg shadow p-6 mt-8">
-                    <h2 className="text-xl font-semibold text-zinc-800 mb-4">Specification</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <SpecRow label="Title" value={product.name} />
-                        <SpecRow label="Brand" value={product.brand} />
-                        <SpecRow label="Country of Origin" value="Bangladesh" />
-                        <SpecRow label="Volume" value={product.volume || '—'} />
-                        <SpecRow label="Scent" value="—" />
-                        <SpecRow label="Product name" value={product.name} />
-                        <SpecRow label="Product Code" value="—" />
-                        <SpecRow label="How To Use" value="—" />
-                        <SpecRow label="Benefits" value="—" />
-                        <SpecRow label="Brand Origin" value="Bangladesh" />
-                        <SpecRow label="Feature" value="—" />
-                    </div>
-
-                    <h2 className="text-xl font-semibold text-zinc-800 mt-8 mb-2">Summary</h2>
-                    <p className="text-sm text-gray-700">{product.name} by {product.brand}. Volume: {product.volume || '—'}. Ships from {product.shippedFrom}. Price: {getCurrentPrice()} TK.</p>
                 </div>
             </div>
 

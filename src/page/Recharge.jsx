@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isAuthenticated, getCurrentUser, getStoredTokens } from '../utils/auth.js';
+import { toast } from 'react-toastify';
+import { isAuthenticated, getCurrentUser, getStoredTokens, fetchShopData } from '../utils/auth.js';
 import { Api_Base_Url } from '../config/api.js';
 
 export default function Recharge() {
@@ -8,12 +9,13 @@ export default function Recharge() {
   const [activeTab, setActiveTab] = useState('cashin'); // 'cashin' | 'send'
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [shopId, setShopId] = useState(null);
 
   const [cashInForm, setCashInForm] = useState({
     account: '',
     amount: '',
     trxId: '',
-    method: 'Bkash',
+    method: 'mobile_banking',
   });
 
   const [sendForm, setSendForm] = useState({
@@ -43,6 +45,24 @@ export default function Recharge() {
     }
   }, [navigate]);
 
+  // Load shop id for authenticated shop owner
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const tokens = getStoredTokens();
+        if (!tokens?.access) return;
+        const shopRes = await fetchShopData(tokens.access);
+        const id = shopRes?.id || shopRes?.shop?.id || shopRes?.data?.id;
+        if (mounted && id) setShopId(id);
+      } catch (e) {
+        // non-fatal, will show error on submit if missing
+        console.warn('Failed to load shop id', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const onCashInChange = (e) => {
     const { name, value } = e.target;
     setCashInForm((prev) => ({ ...prev, [name]: value }));
@@ -62,10 +82,19 @@ export default function Recharge() {
       setError('Please provide account number and amount.');
       return;
     }
+    if (!cashInForm.trxId) {
+      setError('Please provide transaction ID.');
+      return;
+    }
     // optional: enforce 11-digit phone
     const phoneOnly = cashInForm.account.replace(/\D/g, '');
     if (phoneOnly.length < 10) {
       setError('Please enter a valid receiver phone number.');
+      return;
+    }
+
+    if (!shopId) {
+      setError('Shop information not found. Please reload and try again.');
       return;
     }
 
@@ -80,12 +109,16 @@ export default function Recharge() {
       };
       if (tokens && tokens.access) headers['Authorization'] = `Bearer ${tokens.access}`;
 
+      // POST /api/balance-requests/ payload
       const body = {
-        receiver_phone: cashInForm.account,
-        amount: amountStr
+        amount: amountStr,
+        account_number: cashInForm.account,
+        transaction_id: cashInForm.trxId,
+        payment_method: cashInForm.method, // expects 'mobile_banking' or 'bank_transfer'
+        shop: shopId,
       };
 
-  const res = await fetch(`${Api_Base_Url}/api/cashin/`, {
+      const res = await fetch(`${Api_Base_Url}/api/balance-requests/`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body)
@@ -108,8 +141,8 @@ export default function Recharge() {
       }
 
       // success
-      alert('Cash In submitted successfully');
-      setCashInForm({ account: '', amount: '', trxId: '', method: 'Bkash' });
+      toast.success('Cash In request submitted successfully');
+      setCashInForm({ account: '', amount: '', trxId: '', method: 'mobile_banking' });
     } catch (err) {
       console.error('Cashin error', err);
       setError(err.message || 'Something went wrong');
@@ -182,7 +215,7 @@ export default function Recharge() {
 
       // success
       console.log('Top Up SUCCESS:', data);
-      alert('Top Up submitted successfully');
+      toast.success('Top Up submitted successfully');
       setSendForm({ account: '', amount: '' });
     } catch (err) {
       console.error('Top Up error', err);
@@ -343,7 +376,7 @@ export default function Recharge() {
             <form onSubmit={(e) => e.preventDefault()} className="space-y-3">
               {/* Account Number */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Account Number</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Transaction Account Number</label>
                 <input
                   type="tel"
                   name="account"
@@ -352,6 +385,7 @@ export default function Recharge() {
                   placeholder="e.g. 017XXXXXXXX"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   inputMode="numeric"
+                  maxLength={20}
                 />
               </div>
 
@@ -379,6 +413,7 @@ export default function Recharge() {
                   onChange={onCashInChange}
                   placeholder="Bkash/Nagad/Rocket TRX ID"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  maxLength={16}
                 />
               </div>
 
@@ -392,9 +427,8 @@ export default function Recharge() {
                     onChange={onCashInChange}
                     className="w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
-                    <option value="Bkash">Bkash</option>
-                    <option value="Rocket">Rocket</option>
-                    <option value="Nagad">Nagad</option>
+                    <option value="mobile_banking">Mobile Banking (Bkash/Rocket/Nagad)</option>
+                    <option value="bank_transfer">Bank Transfer</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">

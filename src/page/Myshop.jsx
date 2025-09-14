@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredShopData, getCurrentUser } from '../utils/auth.js';
 import axios from 'axios';
 import { Api_Base_Url } from '../config/api';
 import Myorders from '../components/orders/Myorders';
 import Customerorders from '../components/orders/Customerorders';
+import { QRCodeCanvas } from 'qrcode.react';
 
 function Myshop() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -19,11 +20,47 @@ function Myshop() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
   const navigate = useNavigate();
+  const qrRef = useRef(null);
+
+  // Normalize image URL (handles relative paths from API)
+  const resolveImageUrl = useCallback((url) => {
+    if (!url) return '/api/placeholder/300/300';
+    try {
+      if (/^https?:\/\//i.test(url)) return url;
+      const base = (Api_Base_Url || '').replace(/\/$/, '');
+      const path = String(url).startsWith('/') ? url : `/${url}`;
+      return base ? `${base}${path}` : url;
+    } catch {
+      return '/api/placeholder/300/300';
+    }
+  }, []);
+
+  // Build absolute ShopDetails URL for this shop
+  const getShopPublicUrl = useCallback(() => {
+    if (!shopData?.id) return '';
+    if (typeof window === 'undefined') return `/shops/${shopData.id}`;
+    const origin = window.location.origin;
+    return `${origin}/shops/${shopData.id}`;
+  }, [shopData?.id]);
+
+  const handleDownloadQR = () => {
+    try {
+      if (!qrRef.current) return;
+      const canvas = qrRef.current.querySelector('canvas');
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `shop-${shopData?.id}-qr.png`;
+      link.click();
+    } catch (err) {
+      console.error('Failed to download QR:', err);
+    }
+  };
 
   const fetchShopData = async (accessToken) => {
     try {
       console.log('Fetching shop data with token:', accessToken);
-      
+
       const response = await fetch('https://admin.ant2025.com/api/my-shop/', {
         method: 'GET',
         headers: {
@@ -33,14 +70,14 @@ function Myshop() {
       });
 
       const data = await response.json();
-      
+
       console.log('Shop Data Response Status:', response.status);
       console.log('Shop Data Response:', data);
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch shop data');
       }
-      
+
       return data;
     } catch (error) {
       console.error('Fetch Shop Data Error:', error);
@@ -52,9 +89,9 @@ function Myshop() {
     try {
       setProductsLoading(true);
       setProductsError('');
-      
+
       console.log('🛍️ [Myshop.jsx] Fetching shop products for shop ID:', shopId, 'page:', page);
-      
+
       // Try to filter by shop ID in the API call (same as ShopDetails.jsx)
       const response = await axios.get(`${Api_Base_Url}/api/shop-products/?shop=${shopId}&page=${page}`);
       console.log('🛍️ [Myshop.jsx] Shop products response:', response.data);
@@ -82,15 +119,15 @@ function Myshop() {
         console.log('🛍️ [Myshop.jsx] No products found with shop filter, trying fallback...');
         const allProductsResponse = await axios.get(`${Api_Base_Url}/api/shop-products/`);
         let allProducts = [];
-        
+
         if (allProductsResponse.data && allProductsResponse.data.results) {
           allProducts = allProductsResponse.data.results;
         } else if (Array.isArray(allProductsResponse.data)) {
           allProducts = allProductsResponse.data;
         }
-        
+
         // Filter by shop ID client-side
-        shopProducts = allProducts.filter(product => 
+        shopProducts = allProducts.filter(product =>
           product.shop === parseInt(shopId) || product.shop_id === parseInt(shopId)
         );
         setTotalProducts(shopProducts.length);
@@ -99,7 +136,7 @@ function Myshop() {
 
       setProducts(shopProducts);
       console.log('🛍️ [Myshop.jsx] Final products set:', shopProducts);
-      
+
     } catch (error) {
       console.error('🛍️ [Myshop.jsx] Error fetching shop products:', error);
       setProductsError('Failed to load products');
@@ -136,14 +173,14 @@ function Myshop() {
           if (freshData && freshData.shop) {
             console.log('Fresh shop data received:', freshData.shop);
             setShopData(freshData.shop);
-            
+
             // Update localStorage with fresh data
             localStorage.setItem('shopData', JSON.stringify(freshData.shop));
           }
         } catch (apiError) {
           console.error('Failed to fetch fresh shop data:', apiError);
           setError('Failed to load latest shop data');
-          
+
           // If no cached data and API fails, show error
           if (!cachedShopData) {
             setError('Unable to load shop data. Please try refreshing the page.');
@@ -161,9 +198,9 @@ function Myshop() {
     loadShopData();
   }, [navigate]);
 
-  // Load products when products tab is active
+  // Load products when Overview tab is active (Products moved into Overview)
   useEffect(() => {
-    if (activeTab === 'products' && shopData?.id) {
+    if (activeTab === 'overview' && shopData?.id) {
       fetchShopProducts(shopData.id, currentPage);
     }
   }, [activeTab, shopData?.id, currentPage]);
@@ -189,7 +226,7 @@ function Myshop() {
             </svg>
             <h3 className="text-lg font-semibold text-red-800 mb-2">Unable to Load Shop Data</h3>
             <p className="text-red-600 mb-4">{error}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
@@ -212,13 +249,13 @@ function Myshop() {
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Shop Data Found</h3>
             <p className="text-yellow-600 mb-4">Unable to retrieve your shop information</p>
             <div className="space-y-2">
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="block w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
               >
                 Refresh Page
               </button>
-              <button 
+              <button
                 onClick={() => {
                   localStorage.removeItem('shopData');
                   localStorage.removeItem('userData');
@@ -239,24 +276,137 @@ function Myshop() {
     <section className="min-h-[80vh] py-8 px-4 md:px-6 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="bg-white rounded-lg shadow-sm p-6 lg:p-8 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            
+            {/* Left: Shop Info */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {shopData?.name || 'My Shop'}
-              </h1>
-              <p className="text-gray-600">Manage your shop profile, products, and settings</p>
-              {shopData && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Shop ID: #{shopData.id} • Established: {new Date(shopData.created_at).toLocaleDateString()}
-                </p>
-              )}
+              <div className="flex items-start gap-5 mb-6">
+                {/* Logo */}
+                <div className="w-20 h-20 rounded-xl overflow-hidden ring-1 ring-gray-200 bg-white shadow-sm relative group flex-shrink-0">
+                  <img
+                    src={resolveImageUrl(shopData?.shop_image || shopData?.image || shopData?.logo)}
+                    alt={shopData?.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/api/placeholder/300/300';
+                    }}
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow hidden group-hover:block">
+                    Logo
+                  </div>
+                </div>
+
+                {/* Basic Info */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl font-bold text-gray-900 truncate">
+                    {shopData?.name || 'Loading...'}
+                  </h1>
+                  <p className="text-sm uppercase tracking-wide text-green-600 font-medium mt-1">My Shop Dashboard</p>
+                  <p className="text-gray-600 mt-2">Premium products and services for your needs</p>
+                </div>
+              </div>
+
+              {/* Detailed Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">Address</p>
+                    <p className="text-gray-600 text-sm">{shopData?.address || 'Address not available'}</p>
+                    {shopData && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {[shopData.upazila_name, shopData.district_name, shopData.division_name]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {shopData?.owner_phone && (
+                  <div className="flex items-start space-x-3">
+                    <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">Phone</p>
+                      <a href={`tel:${shopData.owner_phone}`} className="text-green-600 hover:text-green-700 text-sm">
+                        {shopData.owner_phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.036 3.185a1 1 0 00.95.69h3.354c.969 0 1.371 1.24.588 1.81l-2.714 1.972a1 1 0 00-.364 1.118l1.036 3.185c.3.921-.755 1.688-1.54 1.118l-2.714-1.972a1 1 0 00-1.176 0l-2.714 1.972c-.784.57-1.838-.197-1.539-1.118l1.036-3.185a1 1 0 00-.364-1.118L4.07 8.612c-.783-.57-.38-1.81.588-1.81h3.354a1 1 0 00.95-.69l1.036-3.185z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">Rating</p>
+                    <p className="text-gray-600 text-sm">4.8 (152 reviews)</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3a4 4 0 118 0v4m-4 6v4m-6 0h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">Established</p>
+                    <p className="text-gray-600 text-sm">{shopData?.created_at ? new Date(shopData.created_at).toLocaleDateString() : 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-4 md:mt-0">
-              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
-                Edit Shop Profile
+
+            {/* Right: QR Code Section */}
+            <div className="flex flex-col items-center justify-center space-y-4 lg:border-l lg:pl-8 border-gray-100">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Share Your Shop</h3>
+                <p className="text-sm text-gray-600 mb-4">Let customers scan to visit your public shop page</p>
+              </div>
+              
+              <div ref={qrRef} className="p-4 bg-gradient-to-br from-white to-green-50 rounded-2xl border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                <a
+                  href={getShopPublicUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open public shop page"
+                  title="Open shop page"
+                  className="block focus:outline-none focus:ring-2 focus:ring-green-500 rounded"
+                >
+                  <QRCodeCanvas
+                    value={getShopPublicUrl() || 'https://example.com'}
+                    size={200}
+                    bgColor="#ffffff"
+                    fgColor="#065f46"
+                    level="M"
+                    includeMargin={true}
+                  />
+                </a>
+              </div>
+              
+              <button
+                onClick={handleDownloadQR}
+                type="button"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                </svg>
+                Download QR
               </button>
+              
+              <p className="text-xs text-gray-500 text-center">
+                Customers can scan this code to<br />
+                visit your public shop page
+              </p>
             </div>
+
           </div>
         </div>
 
@@ -266,18 +416,15 @@ function Myshop() {
             <nav className="flex space-x-8 px-6">
               {[
                 { id: 'overview', label: 'Overview' },
-                { id: 'products', label: 'Products' },
                 { id: 'orders', label: 'Orders' },
-                { id: 'settings', label: 'Settings' }
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -290,164 +437,10 @@ function Myshop() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           {activeTab === 'overview' && (
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Shop Overview</h2>
-              
-              {/* Debug Info - Remove in production */}
-              {/* <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-sm font-semibold text-blue-800 mb-2">Debug Info</h3>
-                <div className="text-xs text-blue-700">
-                  <p><strong>Shop Data Available:</strong> {shopData ? 'Yes' : 'No'}</p>
-                  {shopData && (
-                    <>
-                      <p><strong>Shop Name:</strong> {shopData.name || 'N/A'}</p>
-                      <p><strong>Shop ID:</strong> {shopData.id || 'N/A'}</p>
-                      <p><strong>Address:</strong> {shopData.address || 'N/A'}</p>
-                      <p><strong>Raw Data Keys:</strong> {Object.keys(shopData).join(', ')}</p>
-                    </>
-                  )}
-                </div>
-              </div> */}
-              
-              {/* Shop Info Card */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div className="lg:col-span-2">
-                  <div className="border border-gray-200 rounded-lg p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-20 h-20 bg-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
-                        {shopData?.shop_image ? (
-                          <img 
-                            src={shopData.shop_image} 
-                            alt={shopData.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <svg 
-                          className={`w-10 h-10 text-gray-600 ${shopData?.shop_image ? 'hidden' : 'block'}`} 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {shopData?.name || 'Loading...'}
-                        </h3>
-                        <p className="text-gray-600 mt-1">
-                          Premium products and services for your needs
-                        </p>
-                        <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
-                          <span>📍 {shopData?.address || 'Address not available'}</span>
-                          <span>⭐ 4.8 (152 reviews)</span>
-                          {shopData?.owner_phone && (
-                            <a href={`tel:${shopData.owner_phone}`} className="hover:underline">
-                              📞 {shopData.owner_phone}
-                            </a>
-                          )}
-                        </div>
-                        {shopData && (
-                          <div className="mt-2 text-xs text-gray-400">
-                            {[shopData.upazila_name, shopData.district_name, shopData.division_name]
-                              .filter(Boolean)
-                              .join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">Active</div>
-                      <div className="text-sm text-gray-600">Shop Status</div>
-                    </div>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">125</div>
-                      <div className="text-sm text-gray-600">Total Products</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Performance */}
-              {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-blue-600 text-sm font-medium">Today's Orders</div>
-                      <div className="text-2xl font-bold text-blue-900">12</div>
-                    </div>
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-green-600 text-sm font-medium">Today's Revenue</div>
-                      <div className="text-2xl font-bold text-green-900">৳8,450</div>
-                    </div>
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-yellow-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-yellow-600 text-sm font-medium">Pending Orders</div>
-                      <div className="text-2xl font-bold text-yellow-900">5</div>
-                    </div>
-                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-purple-600 text-sm font-medium">Total Customers</div>
-                      <div className="text-2xl font-bold text-purple-900">248</div>
-                    </div>
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
-
-
-            </div>
-          )}
-
-          {activeTab === 'products' && (
-            <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
                   Products ({totalProducts})
                 </h2>
-
               </div>
 
               {productsLoading ? (
@@ -463,7 +456,7 @@ function Myshop() {
                     </svg>
                     <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Products</h3>
                     <p className="text-red-600 mb-4">{productsError}</p>
-                    <button 
+                    <button
                       onClick={() => fetchShopProducts(shopData?.id, currentPage)}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
@@ -488,19 +481,19 @@ function Myshop() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                     {products.map((product) => (
                       <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                        <div className="aspect-w-1 aspect-h-1 w-full h-48 bg-gray-200">
+                        <div className="relative h-64 bg-gray-50 flex items-center justify-center">
                           {product.image ? (
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="w-full h-full object-cover"
+                              className="w-auto h-full object-contain"
+                              loading="lazy"
                               onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
+                                e.currentTarget.src = '/api/placeholder/300/300';
                               }}
                             />
                           ) : null}
-                          <div className={`w-full h-full bg-gray-200 flex items-center justify-center ${product.image ? 'hidden' : 'flex'}`}>
+                          <div className={`absolute inset-0 bg-gray-200 flex items-center justify-center ${product.image ? 'hidden' : 'flex'}`}>
                             <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -520,16 +513,15 @@ function Myshop() {
                           </div>
                           <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                             <span>ID: #{product.id}</span>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              product.stock > 0 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span className={`px-2 py-1 rounded-full text-xs ${product.stock > 0
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                              }`}>
                               {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                             </span>
                           </div>
                           <div className="flex space-x-2">
-                            <button 
+                            <button
                               onClick={() => navigate(`/shop-products/${product.id}`)}
                               className="w-full inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm"
                             >
@@ -573,6 +565,7 @@ function Myshop() {
             </div>
           )}
 
+
           {activeTab === 'orders' && (
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">Orders</h2>
@@ -596,18 +589,7 @@ function Myshop() {
             </div>
           )}
 
-          {activeTab === 'settings' && (
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Shop Settings</h2>
-              <div className="text-center py-12">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p className="text-gray-600">Shop settings coming soon...</p>
-              </div>
-            </div>
-          )}
+         
         </div>
       </div>
     </section>

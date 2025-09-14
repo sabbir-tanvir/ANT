@@ -18,6 +18,7 @@ export default function ShopProductDetails() {
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderMessage, setOrderMessage] = useState('');
+  const [showDescription, setShowDescription] = useState(false);
   const navigate = useNavigate();
   // Hold-to-confirm state (borrowed pattern from Recharge)
   const [showHold, setShowHold] = useState(false);
@@ -374,33 +375,13 @@ export default function ShopProductDetails() {
                     <span className="bg-blue-100 text-blue-600 text-xs px-3 py-1 rounded-md uppercase">In Stock</span>
                   )} */}
 
-                                 
+
                   <div className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 512 512"
-                      className="w-4 h-4 flex-shrink-0"
-                      aria-hidden="true"
-                    >
-                      <g>
-                        <path fill="#eab14d" d="M250.775 196.73H101.909V13.251a5.558 5.558 0 0 1 5.558-5.558h137.75a5.558 5.558 0 0 1 5.558 5.558z"></path>
-                        <path fill="#e49542" d="M233.562 7.693V196.73h17.214V13.251a5.558 5.558 0 0 0-5.558-5.558z"></path>
-                        <path fill="#df6b57" d="M185.754 50.521H166.93a4.476 4.476 0 0 1-4.476-4.476V7.693h27.777v38.353a4.477 4.477 0 0 1-4.477 4.475z"></path>
-                        <path fill="#f1cb86" d="M421.689 360.519H193.556V126.73h222.575a5.558 5.558 0 0 1 5.558 5.558z"></path>
-                        <path fill="#ecbe6b" d="M404.476 126.73v233.789h17.214v-228.23a5.558 5.558 0 0 0-5.558-5.558h-11.656z"></path>
-                        <path fill="#365e7d" d="M317.035 169.558H298.21a4.476 4.476 0 0 1-4.476-4.476V126.73h27.777v38.353a4.476 4.476 0 0 1-4.476 4.475z"></path>
-                        <path fill="#eab14d" d="M276.366 504.308H7.5V326.077a5.558 5.558 0 0 1 5.558-5.558h263.308z"></path>
-                        <path fill="#e49542" d="M259.153 320.519h17.214v183.789h-17.214z"></path>
-                        <path fill="#365e7d" d="M151.345 363.347H132.52a4.476 4.476 0 0 1-4.476-4.476v-38.353h27.777v38.353a4.476 4.476 0 0 1-4.476 4.476z"></path>
-                        <path fill="#eab14d" d="M504.5 504.308H276.366V360.519h222.575a5.558 5.558 0 0 1 5.558 5.558v138.231z"></path>
-                        <path fill="#e49542" d="M487.286 360.519v143.789H504.5v-138.23a5.558 5.558 0 0 0-5.558-5.558h-11.656z"></path>
-                        <path fill="#df6b57" d="M399.845 403.347H381.02a4.476 4.476 0 0 1-4.476-4.476v-38.353h27.777v38.353a4.476 4.476 0 0 1-4.476 4.476z"></path>
-                        <path fill="#f1cb86" d="M193.556 320.519H44.69v-118.23a5.558 5.558 0 0 1 5.558-5.558h143.308z"></path>
-                        <path fill="#ecbe6b" d="M176.342 196.73h17.214v123.789h-17.214z"></path>
-                        <path fill="#df6b57" d="M128.535 239.558H109.71a4.476 4.476 0 0 1-4.476-4.476V196.73h27.777v38.353a4.476 4.476 0 0 1-4.476 4.475z"></path>
-                        <path d="M498.942 353.018H429.19V238.274c0-4.143-3.357-7.5-7.5-7.5s-7.5 3.357-7.5 7.5v114.744H283.867v-32.5c0-4.143-3.357-7.5-7.5-7.5h-75.311V134.229h85.179v30.854c0 6.604 5.372 11.976 11.976 11.976h18.824c6.604 0 11.977-5.372 11.977-11.976v-30.854h85.179v74.059c0 4.143 3.357 7.5 7.5 7.5s7.5-3.357 7.5-7.5v-76c0-7.2-5.858-13.059-13.059-13.059H258.277V13.251c0-7.2-5.858-13.059-13.059-13.059h-137.75c-7.201 0-13.059 5.858-13.059 13.059v47.416c0 4.143 3.358 7.5 7.5 7.5s7.5-3.357 7.5-7.5V15.192h45.545v30.854c0 6.604 5.372 11.976 11.976 11.976h18.825c6.604 0 11.976-5.372 11.976-11.976V15.192h45.545v104.037h-49.719a7.5 7.5 0 0 0-7.5 7.5v62.5H109.41V90.653c0-4.143-3.358-7.5-7.5-7.5s-7.5 3.357-7.5 7.5v98.577H50.248c-7.201 0-13.059 5.857-13.059 13.058v110.73H13.058c-7.2 0-13.058 5.858-13.058 13.059v178.23a7.5 7.5 0 0 0 7.5 7.5h79.416c4.142 0 7.5-3.357 7.5-7.5s-3.358-7.5-7.5-7.5H15V328.018h105.545v30.853c0 6.604 5.373 11.977 11.976 11.977h18.824c6.604 0 11.976-5.373 11.976-11.977v-30.853h105.545v168.789H116.902c-4.142 0-7.5 3.357-7.5 7.5s3.358 7.5 7.5 7.5h387.597c4.143 0 7.5-3.357 7.5-7.5v-138.23c.001-7.2-5.857-13.059-13.057-13.059zM182.73 43.021h-12.776V15.193h12.776zm131.281 91.208v27.829h-12.776v-27.829zM112.734 204.23h12.777v27.828h-12.777zm-60.545 0h45.545v30.853c0 6.604 5.373 11.976 11.976 11.976h18.825c6.604 0 11.976-5.372 11.976-11.976V204.23h45.545v108.788H52.189zm96.132 151.617h-12.776v-27.829h12.776zm248.501 12.171v27.829h-12.777v-27.829zM497 496.807H283.867V368.018h85.178v30.853c0 6.604 5.373 11.977 11.977 11.977h18.824c6.604 0 11.977-5.373 11.977-11.977v-30.853h85.178v128.789z" fill="#000000"></path>
-                      </g>
-                    </svg>
+{/* 
+                    Here is the svg icon and stock text */}
+
+
+
                     <span className="text-l text-black">
                       {product?.stock && product?.stock !== '0' ? 'In stock' : 'Out of stock'}
                     </span>
@@ -408,53 +389,7 @@ export default function ShopProductDetails() {
                 </div>
               </div>
 
-              {/* Size Selection */}
-              {/* <div className="mb-6 border-t border-b border-stone-300 py-4">
-                <div className="mb-4">
-                  <span className="text-sm font-bold text-black uppercase">Size: </span>
-                  <span className="text-sm text-stone-500">{selectedSize}</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {sizeOptions.map((size) => (
-                    <button
-                      key={size.name}
-                      onClick={() => setSelectedSize(size.name)}
-                      className={`p-3 rounded-lg border-2 flex items-center gap-3 ${
-                        selectedSize === size.name ? 'border-green-600' : 'border-stone-300'
-                      }`}
-                    >
-                      <div className="w-8 h-8 flex-shrink-0">
-                        <img src="/api/placeholder/32/32" alt={size.name} className="w-full h-full object-contain" />
-                      </div>
-                      <div className="text-left">
-                        <div className="text-xs text-black">{size.name}</div>
-                        <div className="text-xs font-bold text-black">{size.price}TK</div>
-                      </div>
-                    </button>
-                  ))}
-                </div> */}
 
-              {/* Volume Selection */}
-              {/* <div className="mt-6">
-                  <span className="text-sm font-bold text-black uppercase">Volume: </span>
-                  <span className="text-sm text-stone-500">{selectedVolume}</span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {volumeOptions.map((volume) => (
-                      <button
-                        key={volume}
-                        onClick={() => setSelectedVolume(volume)}
-                        className={`px-4 py-2 rounded-lg border-2 text-xs font-bold ${
-                          selectedVolume === volume 
-                            ? 'border-green-600 text-black' 
-                            : 'border-stone-300 text-stone-300'
-                        }`}
-                      >
-                        {volume}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div> */}
 
               <div className="space-y-4">
                 {/* Price Card */}
@@ -472,30 +407,6 @@ export default function ShopProductDetails() {
                   </div>
                   <div className="text-xs text-green-700 font-semibold mt-1">Order now and get it soon</div>
                 </div>
-
-                {/* Quick Info */}
-                {/* <div className="rounded-lg border border-stone-200 bg-white p-4">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Brand</span>
-                      <span className="text-zinc-800 font-medium">{product?.product?.brand || product?.brand || 'Unavailable'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Category</span>
-                      <span className="text-zinc-800 font-medium">{product?.product?.category || product?.category || 'Unavailable'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Shop</span>
-                      <span className="text-zinc-800 font-medium">{product?.shop_name || 'Shop'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Stock</span>
-                      <span className={`font-medium ${product?.stock && product?.stock !== '0' ? 'text-green-600' : 'text-red-600'}`}>
-                        {product?.stock && product?.stock !== '0' ? 'In stock' : 'Out of stock'}
-                      </span>
-                    </div>
-                  </div>
-                </div> */}
 
                 {/* Quantity */}
                 <div className="flex items-center gap-3">
@@ -535,196 +446,42 @@ export default function ShopProductDetails() {
                     )}
                     {product?.stock && product?.stock !== '0' ? (orderLoading ? 'PROCESSING...' : 'BUY NOW') : 'OUT OF STOCK'}
                   </button>
-                  {/* {orderMessage && (
-                    <div className={`text-xs mt-2 font-medium ${orderSuccess ? 'text-green-600' : 'text-red-600'}`}>{orderMessage}</div>
-                  )} */}
-
-                  {/* <button className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 25 24" fill="none">
-                      <path d="M12.2305 22C17.7533 22 22.2305 17.5228 22.2305 12C22.2305 6.47715 17.7533 2 12.2305 2C6.70762 2 2.23047 6.47715 2.23047 12C2.23047 13.3789 2.50954 14.6926 3.01429 15.8877C3.29325 16.5481 3.43273 16.8784 3.45 17.128C3.46727 17.3776 3.39381 17.6521 3.24689 18.2012L2.23047 22L6.02924 20.9836C6.57835 20.8367 6.85291 20.7632 7.10249 20.7805C7.35208 20.7977 7.68232 20.9372 8.34282 21.2162C9.53792 21.7209 10.8516 22 12.2305 22Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-                      <path d="M8.81862 12.3773L9.68956 11.2956C10.0566 10.8397 10.5104 10.4153 10.546 9.80826C10.5549 9.65494 10.4471 8.96657 10.2313 7.58986C10.1465 7.04881 9.64133 7 9.20379 7C8.63361 7 8.34852 7 8.06542 7.12931C7.70761 7.29275 7.34026 7.75231 7.25964 8.13733C7.19586 8.44196 7.24326 8.65187 7.33806 9.07169C7.7407 10.8548 8.68528 12.6158 10.1499 14.0805C11.6147 15.5452 13.3757 16.4898 15.1588 16.8924C15.5786 16.9872 15.7885 17.0346 16.0932 16.9708C16.4782 16.8902 16.9377 16.5229 17.1012 16.165C17.2305 15.8819 17.2305 15.5969 17.2305 15.0267C17.2305 14.5891 17.1817 14.084 16.6406 13.9992C15.2639 13.7834 14.5756 13.6756 14.4222 13.6845C13.8152 13.7201 13.3908 14.1738 12.9349 14.5409L11.8532 15.4118" stroke="white" strokeWidth="1.5" />
-                    </svg>
-                    WhatsApp
-                  </button> */}
-
-                  {/* <div className="text-sm font-bold text-black">If you want to know more about the product</div> */}
-
-                  {/* <Link
-                    to={`/shops/${product?.shop || ''}`}
-                    className="w-full py-3 bg-zinc-800 text-white text-sm font-bold rounded hover:bg-zinc-900 text-center block"
-                  >
-                    VIEW SHOP
-                  </Link> */}
                 </div>
-
-                {/* Security & Logistics */}
-                {/* <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-stone-500">Secured transaction</span>
-                    <div className="w-4 h-4 text-green-700">✓</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-zinc-800 mb-2">Available at Shop</div>
-                    <div className="text-sm text-gray-600">{product?.shop_name || 'Shop'}</div>
-                  </div>
-                  <div className="text-sm font-semibold text-green-700">Fast delivery available</div>
-                </div> */}
               </div>
 
-
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* Purchase Section */}
-            {/* <div className="w-full lg:w-80 bg-slate-100 p-6">
-              <div className="space-y-4">
-
-                <div className="mb-4">
-                  <h1 className="text-xl md:text-2xl font-medium text-black mb-3">
-                    {(product?.product?.name || product?.name || 'Product Name')}
-                  </h1>
-
-               
-                  <div className="mb-2">
-                    <span className="text-black text-sm">Brand: <span className="text-green-600 font-medium">{(product?.product?.brand || product?.brand || 'Unavailable')}</span></span>
-                  </div>
-
-            
-                  <div className="mb-2">
-                    <span className="text-black text-sm">Category: <span className="text-green-600 font-medium">{(product?.product?.category || product?.category || 'Unavailable')}</span></span>
-                  </div>
-
-                  <div className="mb-2">
-                    <div className="flex items-center gap-1">
-                      <div className={`w-3 h-3 rounded-full ${product?.stock && product?.stock !== '0' ? 'bg-green-600' : 'bg-red-600'
-                        }`}></div>
-                      <span className="text-xs text-black">
-                        {product?.stock && product?.stock !== '0' ? 'In stock' : 'Out of stock'}
-                      </span>
-                    </div>
-                  </div>
-
-               
-                  <div className="mb-2">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+              {/* Product Description - Moved below buttons */}
+              {(product?.description || product?.product?.description) && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900">Product Description</h3>
+                    <button
+                      onClick={() => setShowDescription(!showDescription)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      <span>{showDescription ? 'Hide' : 'Show'} Details</span>
+                      <svg 
+                        className={`w-4 h-4 transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                       </svg>
-                      <span className="text-sm">Buy From  <span className="font-bold">{product?.shop_name || 'Shop'}</span></span>
-                    </div>
-                  </div>
-
-            
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="bg-green-100 text-green-600 text-xs px-3 py-1 rounded-md uppercase">Available</span>
-
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-xl font-extrabold text-zinc-800">BDT {getCurrentPrice()} TK</div>
-                  <div className="text-xs text-green-700 font-semibold">Order now and get it soon</div>
-                </div>
-
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-zinc-800">QTY:</span>
-                  <div className="flex items-center border border-neutral-400 rounded">
-                    <button
-                      onClick={() => handleQuantityChange(-1)}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
-                    >
-                      <span className="text-lg font-bold">−</span>
-                    </button>
-                    <span className="px-3 py-1 text-sm font-medium text-zinc-800">{quantity}</span>
-                    <button
-                      onClick={() => handleQuantityChange(1)}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
-                    >
-                      <span className="text-lg font-bold">+</span>
                     </button>
                   </div>
+                  {showDescription && (
+                    <div
+                      className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 text-gray-700 animate-fadeIn"
+                      dangerouslySetInnerHTML={{ __html: product?.description || product?.product?.description }}
+                    />
+                  )}
                 </div>
-
-
-                <div className="space-y-3">
-                  <button
-                    disabled={!product?.stock || product?.stock === '0'}
-                    className={`w-full py-3 text-sm font-bold rounded transition-colors ${product?.stock && product?.stock !== '0'
-                      ? 'bg-green-600 text-white hover:bg-green-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
-                  >
-                    {product?.stock && product?.stock !== '0' ? 'BUY NOW' : 'OUT OF STOCK'}
-                  </button>
-
-
-
-                </div>
-
-
-              </div>
-
-
-
-            </div> */}
-
-
-
-            
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Specification and Summary */}
-        <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <h2 className="text-xl font-semibold text-zinc-800 mb-4">Specification</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SpecRow label="Product Name" value={product?.product?.name || product?.name || 'Unavailable'} />
-            <SpecRow label="Brand" value={product?.product?.brand || product?.brand || 'Unavailable'} />
-            <SpecRow label="Category" value={product?.product?.category || product?.category || 'Unavailable'} />
-            <SpecRow label="MRP" value={product?.product?.mrp ? `${product.product.mrp} TK` : (product?.mrp ? `${product.mrp} TK` : 'Unavailable')} />
-            <SpecRow label="Retailer Price" value={product?.product?.retailer_price ? `${product.product.retailer_price} TK` : (product?.retailer_price ? `${product.retailer_price} TK` : 'Unavailable')} />
-            <SpecRow label="Stock" value={product?.stock !== undefined ? (product.stock ? 'In Stock' : 'Out of Stock') : 'Unavailable'} />
-            <SpecRow label="Shop" value={product?.shop_name || 'Unavailable'} />
-            <SpecRow label="Product ID" value={product?.product?.id || product?.id || 'Unavailable'} />
-            <SpecRow label="Referral Bonus" value={product?.product?.referral_bonus ? `${product.product.referral_bonus} TK` : (product?.referral_bonus ? `${product.referral_bonus} TK` : 'Unavailable')} />
-            <SpecRow label="Selling Bonus" value={product?.product?.selling_bonus ? `${product.product.selling_bonus} TK` : (product?.selling_bonus ? `${product.selling_bonus} TK` : 'Unavailable')} />
-            <SpecRow label="Donation" value={product?.product?.donation !== undefined ? `${product.product.donation} TK` : (product?.donation !== undefined ? `${product.donation} TK` : 'Unavailable')} />
-            <SpecRow label="Description" value={product?.product?.description || product?.description || 'Unavailable'} />
-          </div>
 
-          <h2 className="text-xl font-semibold text-zinc-800 mt-8 mb-2">Summary</h2>
-          <p className="text-sm text-gray-700">
-            {product?.product?.name || product?.name || 'Product'}
-            {(product?.product?.brand || product?.brand) && ` by ${product?.product?.brand || product?.brand}`}.
-            {(product?.product?.category || product?.category) && ` Category: ${product?.product?.category || product?.category}.`}
-            {product?.shop_name && ` Available at ${product.shop_name}.`}
-            {` Price: ${getCurrentPrice()} TK.`}
-          </p>
-        </div>
 
         {/* Error Message */}
         {error && (
@@ -793,7 +550,7 @@ export default function ShopProductDetails() {
           </div>
         </div>
       )}
-  <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="colored" />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="colored" />
     </section>
   );
 }

@@ -20,7 +20,7 @@ export async function fetchProducts(limit = 5, force = false) {
   }
 
   const request = axios
-    .get(`${Api_Base_Url}/api/products/`)
+    .get(`${Api_Base_Url}/api/products/?search=dish`)
     .then((res) => {
       let list = Array.isArray(res.data)
         ? res.data

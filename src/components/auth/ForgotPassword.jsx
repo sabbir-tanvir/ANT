@@ -53,8 +53,8 @@ export default function ForgotPassword({ onClose, onSuccess }) {
     e.preventDefault();
     setError('');
     const { new_password, confirm_password } = passwords;
-    if (!new_password || new_password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (!new_password || new_password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     if (new_password !== confirm_password) {

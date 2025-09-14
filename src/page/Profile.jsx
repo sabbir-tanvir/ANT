@@ -35,6 +35,7 @@ export default function Profile() {
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
   const [selectedDistrictId, setSelectedDistrictId] = useState('');
   const [selectedUpazilaId, setSelectedUpazilaId] = useState('');
+  const locationPresetRef = React.useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -71,6 +72,13 @@ export default function Profile() {
         upazila: response.data.upazila || ''
       });
       localStorage.setItem('userProfile', JSON.stringify(response.data));
+      
+      // Set location preset data
+      locationPresetRef.current = {
+        division: response.data.division || '',
+        district: response.data.district || '',
+        upazila: response.data.upazila || ''
+      };
     } catch (err) {
       console.error('[Profile.jsx] Error fetching profile:', err);
       setError('Failed to load profile. Please try again.');
@@ -90,28 +98,6 @@ export default function Profile() {
       toast.error('Failed to load divisions');
     } finally {
       setLoadingDivisions(false);
-    }
-  }, []);
-
-  // Fetch districts for division id
-  const fetchDistricts = useCallback(async (divisionId, preselectName) => {
-    if (!divisionId) { setDistricts([]); setSelectedDistrictId(''); return; }
-    try {
-      setLoadingDistricts(true);
-      const res = await axios.get(`${Api_Base_Url}/api/locations/divisions/${divisionId}/districts/`);
-      setDistricts(res.data || []);
-      if (preselectName) {
-        const match = (res.data || []).find(d => d.name === preselectName);
-        if (match) {
-          setSelectedDistrictId(match.id.toString());
-          setFormData(prev => ({ ...prev, district: match.name }));
-        }
-      }
-    } catch (err) {
-      console.error('[Profile.jsx] Failed to load districts', err);
-      toast.error('Failed to load districts');
-    } finally {
-      setLoadingDistricts(false);
     }
   }, []);
 
@@ -136,9 +122,55 @@ export default function Profile() {
       setLoadingUpazilas(false);
     }
   }, []);
+
+  // Fetch districts for division id
+  const fetchDistricts = useCallback(async (divisionId, preselectName) => {
+    if (!divisionId) { setDistricts([]); setSelectedDistrictId(''); return; }
+    try {
+      setLoadingDistricts(true);
+      const res = await axios.get(`${Api_Base_Url}/api/locations/divisions/${divisionId}/districts/`);
+      setDistricts(res.data || []);
+      if (preselectName) {
+        const match = (res.data || []).find(d => d.name === preselectName);
+        if (match) {
+          setSelectedDistrictId(match.id.toString());
+          setFormData(prev => ({ ...prev, district: match.name }));
+          // Also fetch upazilas and preset if we have upazila data
+          if (locationPresetRef.current && locationPresetRef.current.upazila) {
+            fetchUpazilas(match.id.toString(), locationPresetRef.current.upazila);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Profile.jsx] Failed to load districts', err);
+      toast.error('Failed to load districts');
+    } finally {
+      setLoadingDistricts(false);
+    }
+  }, [fetchUpazilas]);
   useEffect(() => {
     fetchDivisions();
   }, [fetchDivisions]);
+
+  // Preset location dropdowns after divisions are loaded and profile data is available
+  useEffect(() => {
+    if (divisions.length > 0 && locationPresetRef.current) {
+      const locationData = locationPresetRef.current;
+      
+      // Find and set division
+      if (locationData.division) {
+        const divisionMatch = divisions.find(d => d.name === locationData.division);
+        if (divisionMatch) {
+          setSelectedDivisionId(divisionMatch.id.toString());
+          // Fetch districts for this division and preset district
+          fetchDistricts(divisionMatch.id.toString(), locationData.district);
+        }
+      }
+      
+      // Clear the preset data after use
+      locationPresetRef.current = null;
+    }
+  }, [divisions, fetchDistricts]);
 
   // When division changes manually by user
   useEffect(() => {
@@ -202,6 +234,12 @@ export default function Profile() {
             district: parsed.district || '',
             upazila: parsed.upazila || ''
         }));
+        // Set profile location data for preset after divisions are loaded
+        locationPresetRef.current = {
+          division: parsed.division || '',
+          district: parsed.district || '',
+          upazila: parsed.upazila || ''
+        };
         setLoading(false); // show cached immediately
   } catch { /* ignore */ }
     }
@@ -275,6 +313,8 @@ export default function Profile() {
         return;
       }
 
+      console.log('[Profile.jsx] Sending PATCH payload:', payload);
+
       let response;
       if (hasImage) {
         // Attempt multipart PATCH (backend may reject if user_img read-only)
@@ -304,7 +344,6 @@ export default function Profile() {
           setUploadingImage(false);
         }
       } else {
-        console.log('[Profile.jsx] PATCH payload:', payload);
         response = await axios.patch(`${Api_Base_Url}/auth/user/`, payload, {
           headers: {
             'Authorization': `Bearer ${user.accessToken}`,
@@ -313,10 +352,49 @@ export default function Profile() {
         });
       }
 
-      toast.success('Profile updated');
+      console.log('[Profile.jsx] PATCH response:', response.data);
+      toast.success('Profile updated successfully');
+      
+      // Update local state with response
       setProfile(response.data);
       setOriginalProfile(response.data);
       localStorage.setItem('userProfile', JSON.stringify(response.data));
+      
+      // Update formData to match response to ensure UI shows the saved values
+      setFormData({
+        name: response.data.name || '',
+        email: response.data.email || '',
+        phone: response.data.phone || '',
+        reference_phone: response.data.reference_phone || response.data.referred_by_phone || '',
+        division: response.data.division || '',
+        district: response.data.district || '',
+        upazila: response.data.upazila || ''
+      });
+      
+      // Update location dropdown selections to match the saved data
+      if (response.data.division && divisions.length > 0) {
+        const divMatch = divisions.find(d => d.name === response.data.division);
+        if (divMatch) {
+          setSelectedDivisionId(divMatch.id.toString());
+        }
+      }
+      if (response.data.district && districts.length > 0) {
+        const distMatch = districts.find(d => d.name === response.data.district);
+        if (distMatch) {
+          setSelectedDistrictId(distMatch.id.toString());
+        }
+      }
+      if (response.data.upazila && upazilas.length > 0) {
+        const upMatch = upazilas.find(u => u.name === response.data.upazila);
+        if (upMatch) {
+          setSelectedUpazilaId(upMatch.id.toString());
+        }
+      }
+      
+      // Clear image selection
+      setImageFile(null);
+      setImagePreview(null);
+      
       // Merge auth user display info if name/email changed
       if (payload.name || payload.email) {
         const updatedAuthUser = { ...user };
@@ -373,7 +451,6 @@ export default function Profile() {
 
   const sidebarItems = [
     { id: 'account', label: 'Account info', icon: '👤' },
-    { id: 'orders', label: 'My order', icon: '📦' },
     { id: 'transactions', label: 'My transaction', icon: '💳' },
     { id: 'password', label: 'Change password', icon: '🔒' }
   ];
@@ -632,12 +709,7 @@ export default function Profile() {
               </>
             )}
 
-            {activeSection === 'orders' && (
-              <div>
-                <div className="text-black text-2xl font-bold font-['Inter'] capitalize leading-7 mb-6">My Orders</div>
-                <Myorders />
-              </div>
-            )}
+
 
             {activeSection === 'transactions' && (
               <>

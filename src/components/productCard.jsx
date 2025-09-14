@@ -28,8 +28,8 @@ export default function ProductCard({
   return (
     <div className={
       compact
-        ? 'w-full max-w-[300px] bg-white rounded-xl shadow-[0_4px_18px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col mx-auto'
-        : 'w-full max-w-[300px] bg-white rounded-2xl shadow-[0_4px_18px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col mx-auto'
+        ? 'w-full max-w-[300px] bg-white rounded-xl shadow-[0_4px_18px_rgba(0,0,0,0.06)] border border-green-200 hover:border-green-300 hover:shadow-[0_6px_24px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col mx-auto'
+        : 'w-full max-w-[300px] bg-white rounded-2xl shadow-[0_4px_18px_rgba(0,0,0,0.06)] border border-green-200 hover:border-green-300 hover:shadow-[0_6px_24px_rgba(0,0,0,0.08)] transition-all duration-300 overflow-hidden flex flex-col mx-auto'
     }>
       {/* Image Section - Takes 2/3 of the space */}
       <div className={compact ? 'relative h-56 bg-gray-50 flex items-center justify-center' : 'relative h-64 bg-gray-50 flex items-center justify-center'}>
@@ -74,8 +74,8 @@ export default function ProductCard({
           </div>
         )}
 
-  {/* View Button */}
-  <div className="mt-2 flex flex-col md:flex-row gap-3">
+        {/* View Button */}
+        <div className="mt-2 flex flex-col md:flex-row gap-3">
           {/* View Details button (outlined white) */}
           {to ? (
             <Link

@@ -40,7 +40,7 @@ export default function ReviewCard({
         <div className="flex items-center gap-1" aria-label={`Rating: ${safeRating} out of 5`}>
           {stars}
         </div>
-        <p className="text-sm text-zinc-900">{text}</p>
+        <p className="text-sm text-justify text-zinc-900">{text}</p>
       </div>
     </article>
   );
