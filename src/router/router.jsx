@@ -14,6 +14,7 @@ import Profile from "../page/Profile";
 import ProductDetails from "../page/ProductDetails";
 import Myshop from "../page/Myshop";
 import ViewInShop from "../page/ViewInShop";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 
 export const router = createBrowserRouter([
@@ -27,8 +28,22 @@ export const router = createBrowserRouter([
   { path: "/training", element: <Training /> },
   { path: "/view-in-shop/:id", element: <ViewInShop /> },
   { path: "/recharge", element: <Recharge /> },
-  { path: "/shops", element: <Shops /> },
-  { path: "/shops/:id", element: <ShopDetails /> },
+  { 
+    path: "/shops", 
+    element: (
+      <ProtectedRoute restrictedRoles={['shop_owner']} fallbackRedirect="/myshop">
+        <Shops />
+      </ProtectedRoute>
+    )
+  },
+  { 
+    path: "/shops/:id", 
+    element: (
+      <ProtectedRoute restrictedRoles={['shop_owner']} fallbackRedirect="/myshop">
+        <ShopDetails />
+      </ProtectedRoute>
+    )
+  },
   { path: "/shop-products/:id", element: <ShopProductDetails /> },
   { path: "/myshop", element: <Myshop /> },
   { path: "/about", element: <About /> },

@@ -382,7 +382,7 @@ export default function Profile() {
         const distMatch = districts.find(d => d.name === response.data.district);
         if (distMatch) {
           setSelectedDistrictId(distMatch.id.toString());
-          
+
         }
       }
       if (response.data.upazila && upazilas.length > 0) {
@@ -526,7 +526,7 @@ export default function Profile() {
               )}
             </div>
             <div className="mb-1 text-black text-lg font-bold leading-tight truncate">{profile?.name || 'User'}</div>
-            <div className="text-stone-500 text-sm mb-1">{user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}` : 'Customer'}</div>
+            <div className="text-stone-700 text-sm mb-1">{user?.role ? user.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Customer'}</div>
             <div className="text-stone-500 text-xs mb-4">{profile?.phone || formData.phone}</div>
             <div className="flex flex-col gap-1 mt-2 flex-1">
               {sidebarItems.map(item => (
