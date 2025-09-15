@@ -63,9 +63,7 @@ function WhyChoseUs() {
                             <div className="hidden sm:block absolute bottom-0 left-0 w-56 h-56 bg-lime-300/30 rounded-full blur-3xl" />
 
                             {/* Main images */}
-                            <img src="/p1.png" alt="Auto part 1" className="absolute left-2 sm:left-6 md:left-10 top-2 sm:top-4 md:top-6 h-48 sm:h-64 md:h-[360px] w-auto object-contain drop-shadow" />
-                            <img src="/p2.png" alt="Auto part 2" className="absolute left-36 sm:left-44 md:left-56 top-24 sm:top-28 md:top-32 h-40 sm:h-48 md:h-64 w-auto object-contain drop-shadow" />
-                            <img src="/p3.png" alt="Auto part 3" className="absolute left-52 sm:left-64 md:left-72 top-36 sm:top-40 md:top-44 h-28 sm:h-40 md:h-52 w-auto object-contain opacity-80 drop-shadow" />
+                            <img src="/P4.png" alt="Auto part 1" className="absolute sm:items-center left-2 sm:left-10 md:left-10 top-2 sm:top-4 md:top-6 h-48 sm:h-64 md:h-[360px] w-auto object-contain drop-shadow" />
                         </div>
                     </div>
                 </div>

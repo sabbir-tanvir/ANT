@@ -24,6 +24,7 @@ export default function Product() {
   const [orderLoading, setOrderLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [loading, setLoading] = useState(true);
 
   const dropdownRef = useRef(null);
   const categoryBtnRef = useRef(null);
@@ -55,6 +56,8 @@ export default function Product() {
       setCurrentUser(user);
     }
 
+    setLoading(true);
+
     // Fetch products based on current search term
     const apiUrl = debouncedSearchTerm.trim()
       ? `${Api_Base_Url}/api/products/?search=${encodeURIComponent(debouncedSearchTerm.trim())}`
@@ -80,6 +83,9 @@ export default function Product() {
           setProducts([]);
           setFilteredProducts([]);
         }
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
       });
     return () => { mounted = false; };
   }, [debouncedSearchTerm]);
@@ -296,7 +302,7 @@ export default function Product() {
   return (
     <section className="min-h-screen py-8 px-4 md:px-6 bg-gray-50">
       <div className="max-w-[1360px] mx-auto">
-        <div className="bg-white rounded-lg shadow overflow-hidden min-h-[1000px]">
+        <div className="bg-white rounded-lg shadow overflow-hidden">
 
           {/* Search Bar (Enhanced) */}
           <div className="flex justify-center mt-14 px-2">
@@ -425,55 +431,111 @@ export default function Product() {
 
             {/* Products */}
             <div className="flex-1 p-6 pb-20">
-              <div>
-                {view === "grid" ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-6">
-                    {filteredProducts.slice(0, itemsToShow).map((p) => (
-                      <ProductCard
-                        key={p.id}
-                        imageSrc={p.image}
-                        name={p.name}
-                        price={p.price}
-                        brand={p.brand}
-                        category={p.category}
-                        to={`/product/${p.id}`}
-                        compact
-                        showOrderButton={currentUser?.role === 'shop_owner'}
-                        onOrder={openOrderModal}
-                        product={p}
-                      />
-                    ))}
+              {/* Loading State */}
+              {loading && (
+                <div className="flex justify-center items-center py-20">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading products...</p>
                   </div>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {filteredProducts.slice(0, itemsToShow).map((p) => (
-                      <ListProductCard
-                        key={p.id}
-                        id={p.id}
-                        image={p.image}
-                        name={p.name}
-                        brand={p.brand}
-                        category={p.category}
-                        price={p.price}
-                        showOrderButton={currentUser?.role === 'shop_owner'}
-                        onOrder={openOrderModal}
-                        product={p}
-                      />
-                    ))}
+                </div>
+              )}
+
+              {/* No Results */}
+              {!loading && filteredProducts.length === 0 && (
+                <div className="text-center py-20">
+                  <div className="mx-auto w-24 h-24 mb-6 bg-gradient-to-br from-blue-50 to-green-50 rounded-full flex items-center justify-center border-2 border-gray-200">
+                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
                   </div>
-                )}
-                {itemsToShow < filteredProducts.length && (
-                  <div className="flex justify-center py-6">
-                    <button
-                      type="button"
-                      onClick={() => setItemsToShow((prev) => Math.min(prev + 20, filteredProducts.length))}
-                      className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      Load more
-                    </button>
-                  </div>
-                )}
-              </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    {searchTerm || selectedCategory !== "All Categories" 
+                      ? `No products match your search criteria. Try different keywords or browse all categories.` 
+                      : 'No products are currently available. Please check back later.'}
+                  </p>
+                  {(searchTerm || selectedCategory !== "All Categories") && (
+                    <div className="flex justify-center gap-3">
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-green-300 transition-all duration-200"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Clear search
+                        </button>
+                      )}
+                      {selectedCategory !== "All Categories" && (
+                        <button
+                          onClick={() => setSelectedCategory("All Categories")}
+                          className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-green-300 transition-all duration-200"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                          </svg>
+                          Show all categories
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Products Grid/List */}
+              {!loading && filteredProducts.length > 0 && (
+                <div>
+                  {view === "grid" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-6">
+                      {filteredProducts.slice(0, itemsToShow).map((p) => (
+                        <ProductCard
+                          key={p.id}
+                          imageSrc={p.image}
+                          name={p.name}
+                          price={p.price}
+                          brand={p.brand}
+                          category={p.category}
+                          to={`/product/${p.id}`}
+                          compact
+                          showOrderButton={currentUser?.role === 'shop_owner'}
+                          onOrder={openOrderModal}
+                          product={p}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {filteredProducts.slice(0, itemsToShow).map((p) => (
+                        <ListProductCard
+                          key={p.id}
+                          id={p.id}
+                          image={p.image}
+                          name={p.name}
+                          brand={p.brand}
+                          category={p.category}
+                          price={p.price}
+                          showOrderButton={currentUser?.role === 'shop_owner'}
+                          onOrder={openOrderModal}
+                          product={p}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {itemsToShow < filteredProducts.length && (
+                    <div className="flex justify-center py-6">
+                      <button
+                        type="button"
+                        onClick={() => setItemsToShow((prev) => Math.min(prev + 20, filteredProducts.length))}
+                        className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Load more
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

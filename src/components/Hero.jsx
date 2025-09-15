@@ -215,6 +215,16 @@ export default function Hero() {
 
         {/* 5 product cards (no scroll) */}
         <div className="mt-20">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-lg font-bold uppercase tracking-wide">Featured Products</h3>
+            <button
+              onClick={() => navigate('/product')}
+              className="rounded-full border border-gray-200 px-4 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-50"
+            >
+              View all
+            </button>
+          </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {products.map((p) => (
               <ProductCard 

@@ -86,7 +86,7 @@ export default function Contact() {
         </div>
       </div>
       {/* Contact Info from settings */}
-      <div className="w-full max-w-[966px] px-4 md:px-0 mb-8 md:mb-12">
+      <div className="w-full max-w-[966px] px-4 md:px-0 mb-8 md:mb-8">
         <div className="w-full p-4 md:p-6 bg-white rounded-sm shadow-[0px_0px_8px_4px_rgba(0,0,0,0.06)] overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Location Section */}
@@ -165,7 +165,7 @@ export default function Contact() {
       </div>
 
       {/* Contact Form */}
-      <div className="mt-8 md:mt-12 w-full max-w-[966px] px-4 md:px-0">
+      <div className="mt-2 md:mt-2 w-full max-w-[966px] px-4 md:px-0">
         <form onSubmit={handleSubmit} className="w-full p-4 md:p-6 bg-white rounded-sm shadow-[0px_0px_8px_4px_rgba(0,0,0,0.06)] flex flex-col justify-start items-start gap-6 md:gap-9 overflow-hidden">
           <div className="self-stretch flex flex-col justify-start items-start gap-4 md:gap-6 overflow-hidden">
             {/* Full Name Input */}

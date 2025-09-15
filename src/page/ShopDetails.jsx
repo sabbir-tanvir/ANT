@@ -238,7 +238,6 @@ export default function ShopDetails() {
                       <div>
                         <p className="font-medium text-gray-900">Address</p>
                         <p className="text-gray-600">{shop.address}</p>
-                        <p className="text-sm text-gray-500">{[shop.upazila_name, shop.district_name, shop.division_name].filter(Boolean).join(', ')}</p>
                       </div>
                     </div>
                     {shop.owner_phone && (

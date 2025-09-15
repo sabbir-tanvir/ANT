@@ -75,13 +75,13 @@ export default function TradeTransaction({ token }) {
 
 							</div>
 							<div className='flex items-center justify-between'>
-															<div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
-								{tx.seller_number && <span>Seller: {tx.seller_number}</span>}
-							</div>
+								<div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+									{tx.seller_number && <span>Seller: {tx.seller_number}</span>}
+								</div>
 
-							<span>Total: <strong className="text-gray-800">৳{tx.total_amount}</strong></span>
+								<span>Total: <strong className="text-gray-800">৳{tx.total_amount}</strong></span>
 
-								
+
 							</div>
 
 

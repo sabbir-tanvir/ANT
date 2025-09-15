@@ -172,7 +172,7 @@ export default function Shops() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search shops by name, address, or owner..."
+                    placeholder="Search shops by name"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full px-4 py-3 border border-green-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -323,9 +323,7 @@ export default function Shops() {
                         </svg>
                         <div className="text-sm">
                           <div>{shop.address}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {[shop.upazila_name, shop.district_name, shop.division_name].filter(Boolean).join(', ')}
-                          </div>
+                   
                         </div>
                       </div>
 

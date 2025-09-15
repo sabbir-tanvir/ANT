@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "mkdir -p public/wasm && cp -r node_modules/scanbot-web-sdk/bundle/bin/barcode-scanner/* public/wasm"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
@@ -21,6 +22,7 @@
     "react-google-recaptcha": "^3.1.0",
     "react-router-dom": "^7.8.2",
     "react-toastify": "^11.0.5",
+    "scanbot-web-sdk": "^7.2.0",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {

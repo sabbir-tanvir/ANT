@@ -54,7 +54,7 @@ export default function NearbyShop() {
         ) : shops.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {shops.map((shop) => (
-              <article key={shop.id} className="flex flex-col gap-3 group">
+              <article key={shop.id} className="flex flex-col gap-3 group bg-white rounded-xl shadow-[0_4px_18px_rgba(0,0,0,0.08)] border border-gray-100 hover:shadow-[0_6px_24px_rgba(0,0,0,0.12)] hover:border-gray-200 transition-all duration-300 p-4">
                 <div className="overflow-hidden rounded-xl bg-gray-100">
                   <img 
                     src={shop.shop_image || '/api/placeholder/300/200'} 

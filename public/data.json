@@ -207,31 +207,32 @@
       "shippedFrom": "Uttara"
     }
   ],
+
   "reviews": [
-      {
-        "id": 1,
-        "avatar": "https://i.pravatar.cc/64?img=1",
-        "name": "Mohammed A.",
-        "role": "CEO, ABC",
-        "rating": 4,
-        "text": "This CRM has completely transformed the way we handle leads. The automation tools saved us hours every week, and the UI is incredibly user-friendly."
-      },
-      {
-        "id": 2,
-        "avatar": "https://i.pravatar.cc/64?img=2",
-        "name": "Rafiq Ul Haque",
-        "role": "HR, Azic",
-        "rating": 3,
-        "text": "Very powerful platform! It helped us streamline our customer communication and track every interaction. A few minor bugs, but support was quick to resolve them."
-      },
-      {
-        "id": 3,
-        "avatar": "https://i.pravatar.cc/64?img=3",
-        "name": "Abdullah Al Noman",
-        "role": "Businessman",
-        "rating": 4,
-        "text": "We've tried multiple CRM systems, but this one stands out with its customization features and team collaboration tools. Highly recommended for growing teams!"
-      }
+    {
+      "id": 1,
+      "avatar": "https://i.pravatar.cc/64?img=1",
+      "name": "Mehedi Hasan Shuvo",
+      "role": "Homeowner",
+      "rating": 4,
+      "text": "This organic cleaner has completely transformed the way I clean my kitchen. The natural formula is incredibly effective and the scent is so fresh."
+    },
+    {
+      "id": 2,
+      "avatar": "https://i.pravatar.cc/64?img=2",
+      "name": "Rafatul Islam",
+      "role": "Parent",
+      "rating": 3,
+      "text": "Very powerful and safe! It helped us clean our home without worrying about harsh chemicals. A few stains were stubborn, but a second application did the trick. Support was also very helpful."
+    },
+    {
+      "id": 3,
+      "avatar": "https://i.pravatar.cc/64?img=3",
+      "name": "Sabbir Tanvir",
+      "role": "Small Business Owner",
+      "rating": 4,
+      "text": "We've tried multiple cleaners for our office, but this one stands out with its eco-friendly ingredients and powerful cleaning action. Highly recommended for any business!"
+    }
   ],
   "contact": {
     "location": {

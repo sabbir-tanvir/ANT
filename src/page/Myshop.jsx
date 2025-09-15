@@ -341,7 +341,7 @@ function Myshop() {
                   </div>
                 )}
 
-                <div className="flex items-start space-x-3">
+                {/* <div className="flex items-start space-x-3">
                   <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.036 3.185a1 1 0 00.95.69h3.354c.969 0 1.371 1.24.588 1.81l-2.714 1.972a1 1 0 00-.364 1.118l1.036 3.185c.3.921-.755 1.688-1.54 1.118l-2.714-1.972a1 1 0 00-1.176 0l-2.714 1.972c-.784.57-1.838-.197-1.539-1.118l1.036-3.185a1 1 0 00-.364-1.118L4.07 8.612c-.783-.57-.38-1.81.588-1.81h3.354a1 1 0 00.95-.69l1.036-3.185z" />
                   </svg>
@@ -349,7 +349,7 @@ function Myshop() {
                     <p className="font-medium text-gray-900 text-sm">Rating</p>
                     <p className="text-gray-600 text-sm">4.8 (152 reviews)</p>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="flex items-start space-x-3">
                   <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,7 +471,10 @@ function Myshop() {
                   </svg>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Found</h3>
                   <p className="text-gray-600 mb-6">You haven't added any products to your shop yet.</p>
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                  <button 
+                    onClick={() => navigate('/product')}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                  >
                     Add Your First Product
                   </button>
                 </div>
