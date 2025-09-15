@@ -20,6 +20,15 @@ export default function ProductDetails() {
     const [orderLoading, setOrderLoading] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
 
+    // Hold-to-confirm state for shop owner orders
+    const [showHold, setShowHold] = useState(false);
+    const [holdProgress, setHoldProgress] = useState(0); // 0-100
+    const holdTimerRef = useRef(null);
+    const holdStartRef = useRef(null);
+    const HOLD_DURATION = 2000; // ms to complete hold
+    const PROGRESS_RADIUS = 54;
+    const CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
+
     const params = useParams();
     const navigate = useNavigate();
     const sdkInitializedRef = useRef(false);
@@ -95,73 +104,132 @@ export default function ProductDetails() {
     // Open barcode/QR scanner and navigate to scanned shop URL immediately
     const startShopScanner = async () => {
         try {
-            // Ensure SDK is initialized
-            if (!sdkInitializedRef.current) {
-                await ScanbotSDK.initialize({ licenseKey: "", enginePath: "/wasm/" });
-                sdkInitializedRef.current = true;
+            console.log('🔍 [ProductDetails.jsx] Initializing scanner...');
+            
+            if (!window.ScanbotSDK) {
+                console.error('❌ ScanbotSDK not loaded');
+                toast.error('Scanner not available');
+                return;
             }
 
-            const config = new ScanbotSDK.UI.Config.BarcodeScannerScreenConfiguration();
+            console.log('📱 Opening scanner UI...');
+            const result = await window.ScanbotSDK.UI.createBarcodeScanner({
+                containerId: null, // Full-screen overlay
+                style: {
+                    window: { backgroundColor: 'rgba(0,0,0,0.8)' },
+                    laser: { lineColor: '#00ff00', lineWidth: 3 }
+                },
+                onBarcodesDetected: (result) => {
+                    console.log('📊 Barcode detected:', result);
+                    if (result.barcodes && result.barcodes.length > 0) {
+                        const barcode = result.barcodes[0];
+                        const scannedText = barcode.text;
+                        console.log('✅ Scanned text:', scannedText);
 
-            // Optional minimal UX tuning
-            config.userGuidance.title.text = "Point camera at the shop QR";
-            config.topBar.mode = "GRADIENT";
-
-            const result = await ScanbotSDK.UI.createBarcodeScanner(config);
-            if (result && result.items && result.items.length > 0) {
-                // Prefer first item text
-                const text = result.items[0]?.barcode?.text || result.items[0]?.text || "";
-                if (typeof text === 'string' && text.length > 0) {
-                    // Accept only URLs to our shops, fallback to try navigating if it's a valid http(s) URL
-                    const trimmed = text.trim();
-                    const isHttp = /^https?:\/\//i.test(trimmed);
-                    if (isHttp) {
-                        // If it's a relative path in the QR, normalize
+                        // Close scanner first
                         try {
-                            const url = new URL(trimmed, window.location.origin);
-                            // If it matches /shops/:id navigate within SPA, else fallback to full redirect
-                            const shopsMatch = url.pathname.match(/^\/shops\/(\d+)/);
-                            if (shopsMatch) {
-                                navigate(`/shops/${shopsMatch[1]}`);
-                            } else {
-                                // external or unexpected path -> hard redirect
-                                window.location.href = url.toString();
+                            window.ScanbotSDK.UI.destroyBarcodeScanner();
+                        } catch (destroyErr) {
+                            console.warn('⚠️ Scanner destroy error:', destroyErr);
+                        }
+
+                        // Navigate to scanned URL
+                        if (scannedText) {
+                            let targetUrl = scannedText;
+                            
+                            // Handle different URL formats
+                            if (scannedText.startsWith('http://') || scannedText.startsWith('https://')) {
+                                // Absolute URL - extract path
+                                try {
+                                    const url = new URL(scannedText);
+                                    targetUrl = url.pathname + url.search + url.hash;
+                                } catch (urlErr) {
+                                    console.warn('⚠️ URL parse error, using as-is:', urlErr);
+                                }
+                            } else if (!scannedText.startsWith('/')) {
+                                // Not a URL path, try to extract shop ID with regex
+                                const shopIdMatch = scannedText.match(/shops?[/:]?(\d+)/i);
+                                if (shopIdMatch) {
+                                    targetUrl = `/shops/${shopIdMatch[1]}`;
+                                } else {
+                                    console.warn('⚠️ Unrecognized format, using fallback navigation');
+                                    targetUrl = '/shops';
+                                }
                             }
-                            return;
-                        } catch {
-                            // If URL ctor fails, try SPA navigation directly
-                            navigate(trimmed);
-                            return;
+
+                            console.log('🚀 Navigating to:', targetUrl);
+                            navigate(targetUrl);
                         }
                     }
-
-                    // If QR contains a relative path like /shops/6
-                    if (trimmed.startsWith('/shops/')) {
-                        navigate(trimmed);
-                        return;
+                },
+                onError: (error) => {
+                    console.error('❌ Scanner error:', error);
+                    toast.error('Scanner error occurred');
+                    try {
+                        window.ScanbotSDK.UI.destroyBarcodeScanner();
+                    } catch {
+                        // Scanner cleanup failed, ignore
                     }
-
-                    // Last resort: try to extract shop id from plain text
-                    const idMatch = trimmed.match(/shops\/(\d+)/);
-                    if (idMatch) {
-                        navigate(`/shops/${idMatch[1]}`);
-                        return;
-                    }
-
-                    toast.error('Scanned code is not a valid shop link');
-                } else {
-                    toast.error('No readable QR content');
                 }
-            } else {
-                // Scanner closed without result — do nothing
-            }
+            });
+
+            console.log('📱 Scanner opened successfully:', result);
         } catch (err) {
-            console.error('Scanner error:', err);
+            console.error('❌ [ProductDetails.jsx] Scanner error:', err);
             toast.error('Failed to open scanner');
         }
     };
 
-    if (!product) {
+    // Open hold overlay for shop owner orders instead of placing order immediately
+    const openHoldOverlay = () => {
+        if (!currentUser || currentUser.role !== 'shop_owner') return;
+        if (!product) return;
+        if (_quantity < 1) return;
+        
+        // Reset progress
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
+        setShowHold(true);
+    };
+
+    // Start holding (mouse/touch down)
+    const startHold = () => {
+        if (orderLoading) return;
+        holdStartRef.current = performance.now();
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        holdTimerRef.current = setInterval(() => {
+            const now = performance.now();
+            const elapsed = now - (holdStartRef.current || now);
+            const p = Math.min(100, Math.round((elapsed / HOLD_DURATION) * 100));
+            setHoldProgress(p);
+            if (p >= 100) {
+                // Complete
+                clearInterval(holdTimerRef.current);
+                holdTimerRef.current = null;
+                setTimeout(() => {
+                    setShowHold(false);
+                    handleDirectOrder();
+                }, 120);
+            }
+        }, 30);
+    };
+
+    const cancelHold = () => {
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
+    };
+
+    // Cleanup on unmount
+    useEffect(() => () => { if (holdTimerRef.current) clearInterval(holdTimerRef.current); }, []);    if (!product) {
         return (
             <section className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-gray-500 text-sm">Loading product…</div>
@@ -751,7 +819,7 @@ export default function ProductDetails() {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={handleDirectOrder}
+                                            onClick={openHoldOverlay}
                                             disabled={orderLoading}
                                             className="w-full cursor-pointer py-3 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
@@ -910,6 +978,61 @@ export default function ProductDetails() {
                                     'Confirm Order'
                                 )}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Hold-to-confirm overlay for shop owner orders */}
+            {showHold && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+                    <div className="w-full max-w-sm">
+                        <div className="bg-white rounded-2xl p-6 text-center relative shadow-xl">
+                            <button
+                                type="button"
+                                aria-label="Close"
+                                onClick={() => { cancelHold(); setShowHold(false); }}
+                                className="absolute right-3 top-3 p-2 rounded-full text-gray-500 hover:bg-gray-100"
+                            >
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                            <h3 className="text-base font-semibold text-gray-900 mb-1">Hold to Confirm Order</h3>
+                            <p className="text-xs text-gray-500 mb-4">Confirm purchase of {_quantity} × {product?.name || 'Product'}</p>
+                            <div className="text-sm font-medium mb-4">Total: <span className="text-green-600 font-semibold">BDT {(getCurrentPrice() * _quantity).toLocaleString('en-US')} TK</span></div>
+                            <div
+                                className="mx-auto relative w-40 h-40 select-none"
+                                onMouseDown={startHold}
+                                onMouseUp={cancelHold}
+                                onMouseLeave={cancelHold}
+                                onTouchStart={(e) => { e.preventDefault(); startHold(); }}
+                                onTouchEnd={cancelHold}
+                                onTouchCancel={cancelHold}
+                            >
+                                <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="54" stroke="#E5E7EB" strokeWidth="10" fill="none" />
+                                    <circle
+                                        cx="60" cy="60" r="54"
+                                        stroke="#10B981" strokeWidth="10" fill="none" strokeLinecap="round"
+                                        style={{
+                                            strokeDasharray: CIRCUMFERENCE,
+                                            strokeDashoffset: CIRCUMFERENCE - (holdProgress / 100) * CIRCUMFERENCE,
+                                            transition: 'stroke-dashoffset 30ms linear'
+                                        }}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <svg className="w-16 h-16 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="absolute bottom-3 inset-x-0 text-[11px] text-gray-500">
+                                    {holdProgress < 100 ? `Hold ${Math.ceil((HOLD_DURATION * (1 - holdProgress / 100)) / 1000)}s` : 'Release'}
+                                </div>
+                            </div>
+                            <div className="mt-4 text-[11px] text-gray-500">Keep holding until the circle completes</div>
                         </div>
                     </div>
                 </div>
