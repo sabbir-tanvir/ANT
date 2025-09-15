@@ -26,7 +26,7 @@ export default function ListProductCard({
 
           {/* Product Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-tight truncate">{name}</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-tight">{name}</h3>
             {(brand || category) && (
               <div className="flex items-center gap-2 text-left mt-0.5">
                 {brand && <span className="text-[11px] tracking-wide uppercase text-gray-500 font-medium">{brand}</span>}
@@ -42,13 +42,13 @@ export default function ListProductCard({
         </div>
 
         {/* Bottom section on mobile, right section on desktop */}
-        <div className="flex flex-col sm:flex-col sm:items-end gap-2 sm:gap-2">
+        <div className="flex flex-col sm:flex-col sm:items-end gap-2 sm:gap-2 w-full sm:w-auto">
           {/* Price on desktop - show here */}
           <span className="hidden sm:block text-lg sm:text-xl font-bold text-green-600 whitespace-nowrap">৳{price}</span>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Link 
               to={`/product/${id}`}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-full border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm"
             >
               View Details
             </Link>
@@ -59,7 +59,7 @@ export default function ListProductCard({
                   e.preventDefault();
                   onOrder(productData);
                 }}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm"
               >
                 Buy now
               </button>
@@ -81,7 +81,7 @@ export default function ListProductCard({
 
         {/* Product Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-tight truncate">{name}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-tight">{name}</h3>
           {(brand || category) && (
             <div className="flex items-center gap-2 text-left mt-0.5">
               {brand && <span className="text-[11px] tracking-wide uppercase text-gray-500 font-medium">{brand}</span>}
@@ -97,7 +97,7 @@ export default function ListProductCard({
       </div>
 
       {/* Bottom section on mobile, right section on desktop */}
-      <div className="flex flex-col sm:items-end">
+      <div className="flex flex-col sm:items-end w-full sm:w-auto">
         {/* Price on desktop - show here */}
         <span className="hidden sm:block text-lg sm:text-xl font-bold text-green-600 whitespace-nowrap">৳{price}</span>
         <span className="mt-1 w-full sm:w-auto inline-flex items-center justify-center rounded-full border border-black bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-black/5 transition-colors shadow-sm">View Details</span>

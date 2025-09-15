@@ -382,6 +382,7 @@ export default function Profile() {
         const distMatch = districts.find(d => d.name === response.data.district);
         if (distMatch) {
           setSelectedDistrictId(distMatch.id.toString());
+          
         }
       }
       if (response.data.upazila && upazilas.length > 0) {

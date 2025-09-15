@@ -67,7 +67,6 @@ function Navbar() {
         { label: 'Product', to: '/product' },
         { label: 'Recharge', to: '/recharge' },
         { label: 'My Shop', to: '/myshop' },
-              { label: 'Shops', to: '/shops' },
 
         ...baseItems
       ];

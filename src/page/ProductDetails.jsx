@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -36,6 +36,21 @@ export default function ProductDetails() {
     ];
 
     const _volumeOptions = ['1000ml', '800ml', '500ml', '250ml'];
+
+        // Description helpers (approximate 4 lines or ~50+ words)
+    const descriptionHtml = product?.description || '';
+    const descriptionPlain = useMemo(() => {
+        if (!descriptionHtml) return '';
+        try {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = descriptionHtml;
+            return tempDiv.textContent || tempDiv.innerText || '';
+        } catch {
+            return descriptionHtml;
+        }
+    }, [descriptionHtml]);
+    const descriptionWordCount = useMemo(() => (descriptionPlain ? descriptionPlain.split(/\s+/).length : 0), [descriptionPlain]);
+    const descriptionIsLong = descriptionWordCount > 50 || (descriptionPlain?.length || 0) > 300;
 
     useEffect(() => {
         const idFromRoute = params.id;
@@ -776,118 +791,46 @@ export default function ProductDetails() {
                                     <div className="mt-6 pt-6 border-t border-gray-200">
                                         <div className="flex items-center justify-between mb-3">
                                             <h3 className="text-lg font-semibold text-gray-900">Product Description</h3>
-                                            <button
-                                                onClick={() => setShowDescription(!showDescription)}
-                                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-                                            >
-                                                <span>{showDescription ? 'Hide' : 'Show'} Details</span>
-                                                <svg 
-                                                    className={`w-4 h-4 transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`}
-                                                    fill="none" 
-                                                    stroke="currentColor" 
-                                                    viewBox="0 0 24 24"
+                                            {descriptionIsLong && (
+                                                <button
+                                                    onClick={() => setShowDescription(!showDescription)}
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                                                    aria-expanded={showDescription}
                                                 >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </button>
+                                                    <span>{showDescription ? 'Show less' : 'Show more'}</span>
+                                                    <svg
+                                                        className={`w-4 h-4 transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            )}
                                         </div>
-                                        {showDescription && (
-                                            <div
-                                                className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 animate-fadeIn"
-                                                dangerouslySetInnerHTML={{ __html: product.description }}
-                                            />
-                                        )}
+                                        <div
+                                            className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 animate-fadeIn"
+                                            style={descriptionIsLong && !showDescription ? { 
+                                                display: '-webkit-box', 
+                                                WebkitLineClamp: 4, 
+                                                WebkitBoxOrient: 'vertical', 
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            } : undefined}
+                                            dangerouslySetInnerHTML={{ __html: product.description }}
+                                        />
                                     </div>
                                 )}
 
 
-                                {/* Security & Logistics */}
-                                {/* <div className="space-y-4 pt-4 border-t">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-stone-500">Secured transaction</span>
-                                        <div className="w-4 h-4 text-green-700">✓</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-semibold text-zinc-800 mb-2">Our Top Logistics Partners</div>
-                                        <div className="flex gap-3">
-                                            <div className="w-14 h-8 border border-black rounded"></div>
-                                            <div className="w-14 h-8 border border-black rounded"></div>
-                                        </div>
-                                    </div>
-                                    <div className="text-sm font-semibold text-green-700">Fastest cross-border delivery</div>
-                                </div> */}
+
                             </div>
 
 
                         </div>
 
-                        {/* Purchase Section */}
-                        {/* 
-                        
-                        <div className="w-full lg:w-80 bg-slate-100 p-6">
-                            <div className="space-y-4">
-                               
-                                <div>
-                                    <div className="text-xl font-extrabold text-zinc-800">BDT {getCurrentPrice()} TK</div>
-                                    <div className="text-xs text-green-700 font-semibold">Order now and get it around Saturday, August 30</div>
-                                </div>
 
-                             
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-zinc-800">QTY:</span>
-                                    <div className="flex items-center border border-neutral-400 rounded">
-                                        <button 
-                                            onClick={() => handleQuantityChange(-1)}
-                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
-                                        >
-                                            <span className="text-lg font-bold">−</span>
-                                        </button>
-                                        <span className="px-3 py-1 text-sm font-medium text-zinc-800">{quantity}</span>
-                                        <button 
-                                            onClick={() => handleQuantityChange(1)}
-                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
-                                        >
-                                            <span className="text-lg font-bold">+</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                          
-                                <div className="space-y-3">
-                                    <button className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700">
-                                        BUY NOW
-                                    </button>
-                                    <button className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 flex items-center justify-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 25 24" fill="none">
-                                            <path d="M12.2305 22C17.7533 22 22.2305 17.5228 22.2305 12C22.2305 6.47715 17.7533 2 12.2305 2C6.70762 2 2.23047 6.47715 2.23047 12C2.23047 13.3789 2.50954 14.6926 3.01429 15.8877C3.29325 16.5481 3.43273 16.8784 3.45 17.128C3.46727 17.3776 3.39381 17.6521 3.24689 18.2012L2.23047 22L6.02924 20.9836C6.57835 20.8367 6.85291 20.7632 7.10249 20.7805C7.35208 20.7977 7.68232 20.9372 8.34282 21.2162C9.53792 21.7209 10.8516 22 12.2305 22Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-                                            <path d="M8.81862 12.3773L9.68956 11.2956C10.0566 10.8397 10.5104 10.4153 10.546 9.80826C10.5549 9.65494 10.4471 8.96657 10.2313 7.58986C10.1465 7.04881 9.64133 7 9.20379 7C8.63361 7 8.34852 7 8.06542 7.12931C7.70761 7.29275 7.34026 7.75231 7.25964 8.13733C7.19586 8.44196 7.24326 8.65187 7.33806 9.07169C7.7407 10.8548 8.68528 12.6158 10.1499 14.0805C11.6147 15.5452 13.3757 16.4898 15.1588 16.8924C15.5786 16.9872 15.7885 17.0346 16.0932 16.9708C16.4782 16.8902 16.9377 16.5229 17.1012 16.165C17.2305 15.8819 17.2305 15.5969 17.2305 15.0267C17.2305 14.5891 17.1817 14.084 16.6406 13.9992C15.2639 13.7834 14.5756 13.6756 14.4222 13.6845C13.8152 13.7201 13.3908 14.1738 12.9349 14.5409L11.8532 15.4118" stroke="white" strokeWidth="1.5" />
-                                        </svg>
-                                        WhatsApp
-                                    </button>
-                                    <div className="text-sm font-bold text-black">If you want to know more about the product</div>
-                                    <button className="w-full py-3 bg-zinc-800 text-white text-sm font-bold rounded hover:bg-zinc-900">
-                                        VIEW IN STORE
-                                    </button>
-                                </div>
-
-                       
-                                <div className="space-y-4 pt-4 border-t">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-stone-500">Secured transaction</span>
-                                        <div className="w-4 h-4 text-green-700">✓</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-semibold text-zinc-800 mb-2">Our Top Logistics Partners</div>
-                                        <div className="flex gap-3">
-                                            <div className="w-14 h-8 border border-black rounded"></div>
-                                            <div className="w-14 h-8 border border-black rounded"></div>
-                                        </div>
-                                    </div>
-                                    <div className="text-sm font-semibold text-green-700">Fastest cross-border delivery</div>
-                                </div>
-                            </div>
-                        </div>
- */}
 
                     </div>
                 </div>
