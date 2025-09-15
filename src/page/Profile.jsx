@@ -618,28 +618,30 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Reference Code (one-time) */}
-                <div className="mb-8">
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-black text-sm font-normal font-['Inter'] leading-tight">Reference Phone</span>
-                    { (originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? (
-                      <span className="text-xs text-neutral-500">Set (locked)</span>
-                    ) : (
-                      <span className="text-xs text-neutral-500">Can be set only once</span>
-                    ) }
+                {/* Reference Code (one-time) - Only show for non-shop owners */}
+                {user?.role !== 'shop_owner' && (
+                  <div className="mb-8">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-black text-sm font-normal font-['Inter'] leading-tight">Reference Phone</span>
+                      { (originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? (
+                        <span className="text-xs text-neutral-500">Set (locked)</span>
+                      ) : (
+                        <span className="text-xs text-neutral-500">Can be set only once</span>
+                      ) }
+                    </div>
+                    <div className={`w-full h-11 rounded-md border ${ (originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? 'bg-gray-50 border-stone-300' : 'bg-white border-stone-300' }`}>
+                      <input
+                        type="text"
+                        name="reference_phone"
+                        value={formData.reference_phone}
+                        onChange={handleInputChange}
+                        disabled={Boolean(originalProfile?.reference_phone || originalProfile?.referred_by_phone)}
+                        className={`w-full h-full px-3 bg-transparent text-sm font-normal font-['Inter'] leading-tight focus:outline-none rounded-md ${(originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? 'text-neutral-500 cursor-not-allowed' : 'text-neutral-800'}`}
+                        placeholder="Enter referral phone"
+                      />
+                    </div>
                   </div>
-                  <div className={`w-full h-11 rounded-md border ${ (originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? 'bg-gray-50 border-stone-300' : 'bg-white border-stone-300' }`}>
-                    <input
-                      type="text"
-                      name="reference_phone"
-                      value={formData.reference_phone}
-                      onChange={handleInputChange}
-                      disabled={Boolean(originalProfile?.reference_phone || originalProfile?.referred_by_phone)}
-                      className={`w-full h-full px-3 bg-transparent text-sm font-normal font-['Inter'] leading-tight focus:outline-none rounded-md ${(originalProfile?.reference_phone || originalProfile?.referred_by_phone) ? 'text-neutral-500 cursor-not-allowed' : 'text-neutral-800'}`}
-                      placeholder="Enter referral phone"
-                    />
-                  </div>
-                </div>
+                )}
 
                 {/* Location Fields with dynamic selects */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
