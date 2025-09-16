@@ -23,15 +23,15 @@ export default function ShopDetails() {
     const origin = window.location.origin;
     const pathname = window.location.pathname;
     const search = window.location.search;
-    
+
     // Construct clean URL
     let finalUrl = origin + pathname + search;
-    
+
     // Ensure HTTPS for production domains (helps mobile recognition)
     if (!origin.includes('localhost') && !origin.includes('127.0.0.1') && !finalUrl.startsWith('https://')) {
       finalUrl = finalUrl.replace('http://', 'https://');
     }
-    
+
     return finalUrl;
   })();
 
@@ -39,11 +39,11 @@ export default function ShopDetails() {
     try {
       const container = qrRef.current;
       if (!container) return;
-      
+
       // QRCodeCanvas renders as a canvas element
       const canvas = container.querySelector('canvas');
       if (!canvas) return;
-      
+
       // Convert canvas to PNG and download
       const pngData = canvas.toDataURL('image/png');
       const a = document.createElement('a');
@@ -91,13 +91,13 @@ export default function ShopDetails() {
       if (!shopProducts || shopProducts.length === 0) {
         const allProductsResponse = await axios.get(`${Api_Base_Url}/api/shop-products/`);
         let allProducts = [];
-        
+
         if (allProductsResponse.data && allProductsResponse.data.results) {
           allProducts = allProductsResponse.data.results;
         } else if (Array.isArray(allProductsResponse.data)) {
           allProducts = allProductsResponse.data;
         }
-        
+
         shopProducts = allProducts.filter(product =>
           product.shop_name === shop?.name || product.shop === parseInt(id)
         );
@@ -207,64 +207,69 @@ export default function ShopDetails() {
           <div className="bg-white rounded-lg shadow-sm p-6 lg:p-8 mb-8">
             <div className="flex flex-col lg:flex-row gap-8 items-start">
               {/* Compact Image */}
-              <div className="w-80 justify-center items-center h-auto flex-shrink-0 relative group">
-                <img
-                  src={shop.shop_image || '/api/placeholder/300/300'}
-                  alt={shop.name}
-                  className="w-auto h-auto justify-center items-center object-cover rounded-xl ring-1 ring-gray-200 shadow-sm group-hover:shadow-md transition-shadow"
-                  onError={(e) => {
-                    e.target.src = '/api/placeholder/300/300';
-                  }}
-                />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow hidden group-hover:block">Logo</div>
-              </div>
+              <div className="flex flex-row lg:flex-row gap-8 items-start">
 
-              {/* Shop Information & QR Grid */}
-              <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Info Column */}
-                <div className="space-y-6 md:pr-4">
+
+                <div className="w-32 lg:w-80 justify-center items-center h-auto flex-shrink-0 relative group">
+                  <img
+                    src={shop.shop_image || '/api/placeholder/300/300'}
+                    alt={shop.name}
+                    className="w-auto h-auto justify-center items-center object-cover rounded-xl ring-1 ring-gray-200 shadow-sm group-hover:shadow-md transition-shadow"
+                    onError={(e) => {
+                      e.target.src = '/api/placeholder/300/300';
+                    }}
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow hidden group-hover:block">Logo</div>
+                </div>
+                <div className="space-y-4 lg:space-y-6 lg:pr-4">
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-1 tracking-tight">{shop.name}</h1>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-1 tracking-tight">{shop.name}</h1>
                     <p className="text-sm uppercase tracking-wide text-green-600 font-medium">Registered Shop</p>
                     <p className="mt-3 text-gray-600">Owner: <span className="font-semibold text-gray-900">{shop.owner_name}</span></p>
                   </div>
                   {/* Contact Information */}
-                  <div className="space-y-4">
+                  <div className="space-y-3 lg:space-y-4">
                     <div className="flex items-start">
-                      <svg className="w-5 h-5 text-gray-400 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 mr-2 lg:mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <div>
-                        <p className="font-medium text-gray-900">Address</p>
-                        <p className="text-gray-600">{shop.address}</p>
+                        <p className="font-medium text-gray-900 text-sm lg:text-base">Address</p>
+                        <p className="text-gray-600 text-sm lg:text-base">{shop.address}</p>
                       </div>
                     </div>
                     {shop.owner_phone && (
                       <div className="flex items-center">
-                        <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 mr-2 lg:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                         <div>
-                          <p className="font-medium text-gray-900">Phone</p>
-                          <a href={`tel:${shop.owner_phone}`} className="text-green-600 hover:text-green-700">{shop.owner_phone}</a>
+                          <p className="font-medium text-gray-900 text-sm lg:text-base">Phone</p>
+                          <a href={`tel:${shop.owner_phone}`} className="text-green-600 hover:text-green-700 text-sm lg:text-base">{shop.owner_phone}</a>
                         </div>
                       </div>
                     )}
                     <div className="flex items-center">
-                      <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 mr-2 lg:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3a4 4 0 118 0v4m-4 6v4m-6 0h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                       </svg>
                       <div>
-                        <p className="font-medium text-gray-900">Established</p>
-                        <p className="text-gray-600">{shop.created_at ? new Date(shop.created_at).toLocaleDateString() : 'Not specified'}</p>
+                        <p className="font-medium text-gray-900 text-sm lg:text-base">Established</p>
+                        <p className="text-gray-600 text-sm lg:text-base">{shop.created_at ? new Date(shop.created_at).toLocaleDateString() : 'Not specified'}</p>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Shop Information & QR Grid */}
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-1 gap-6 lg:gap-10">
+                {/* Info Column */}
+
                 {/* QR Column */}
-                <div className="flex flex-col items-center justify-start gap-5 md:border-l md:pl-8 border-gray-100">
-                  <div ref={qrRef} className="p-5 bg-gradient-to-br from-white to-green-50 rounded-2xl border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex flex-col items-center justify-start gap-4 lg:gap-5 lg:border-l lg:pl-8 border-gray-100">
+                  <div ref={qrRef} className="p-3 lg:p-5 bg-gradient-to-br from-white to-green-50 rounded-2xl border border-green-100 shadow-sm hover:shadow-md transition-shadow">
                     <a
                       href={currentUrl}
                       target="_blank"
@@ -275,7 +280,7 @@ export default function ShopDetails() {
                     >
                       <QRCodeCanvas
                         value={currentUrl || 'https://example.com'}
-                        size={240}
+                        size={150}
                         bgColor="#ffffff"
                         fgColor="#065f46"
                         level="M"
@@ -286,7 +291,7 @@ export default function ShopDetails() {
                   <button
                     onClick={handleDownloadQR}
                     type="button"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-green-600 text-white text-sm font-medium shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 rounded-md bg-green-600 text-white text-sm font-medium shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
                     Download QR
@@ -442,8 +447,8 @@ export default function ShopDetails() {
                             ৳{product.price}
                           </span>
                           <span className={`text-sm px-2 py-1 rounded-full ${product.stock && product.stock !== '0'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}>
                             {product.stock && product.stock !== '0' ? `Stock: ${product.stock}` : 'Out of Stock'}
                           </span>
