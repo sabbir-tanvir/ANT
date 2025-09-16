@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Api_Base_Url } from '../config/api';
-import { isAuthenticated, getStoredTokens } from '../utils/auth';
+import { isAuthenticated, getStoredTokens, getCurrentUser } from '../utils/auth';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -19,6 +19,7 @@ export default function ShopProductDetails() {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderMessage, setOrderMessage] = useState('');
   const [showDescription, setShowDescription] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   // Hold-to-confirm state (borrowed pattern from Recharge)
   const [showHold, setShowHold] = useState(false);
@@ -29,14 +30,25 @@ export default function ShopProductDetails() {
   const PROGRESS_RADIUS = 54;
   const CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
 
-  // Mock data for missing fields
-  const sizeOptions = [
-    { name: 'Big size', price: 150 },
-    { name: 'Medium size', price: 200 },
-    { name: 'Small size', price: 250 }
-  ];
 
-  const _volumeOptions = ['1000ml', '800ml', '500ml', '250ml'];
+
+
+
+  // Description helpers (approximate 4 lines or ~50+ words)
+  const descriptionHtml = product?.description || '';
+  const descriptionPlain = useMemo(() => {
+    if (!descriptionHtml) return '';
+    try {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = descriptionHtml;
+      return tempDiv.textContent || tempDiv.innerText || '';
+    } catch {
+      return descriptionHtml;
+    }
+  }, [descriptionHtml]);
+  const descriptionWordCount = useMemo(() => (descriptionPlain ? descriptionPlain.split(/\s+/).length : 0), [descriptionPlain]);
+  const descriptionIsLong = descriptionWordCount > 50 || (descriptionPlain?.length || 0) > 300;
+
 
   const fetchProductDetails = useCallback(async () => {
     try {
@@ -60,14 +72,29 @@ export default function ShopProductDetails() {
     }
   }, [id, fetchProductDetails]);
 
+  // Detect user role
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const user = getCurrentUser();
+      setCurrentUser(user);
+    } else {
+      setCurrentUser(null);
+    }
+  }, []);
+
   const getCurrentPrice = () => {
     // Handle nested product structure
     const productData = product?.product || product;
-    // Prefer retailer/sale price if available, otherwise fall back to MRP
-    if (productData?.retailer_price) return productData.retailer_price;
+    
+    // For shop owners, show retailer price if available, otherwise MRP
+    if (currentUser?.role === 'shop_owner') {
+      if (productData?.retailer_price) return productData.retailer_price;
+    }
+    
+    // For all users (including shop owners if no retailer price), show MRP
     if (productData?.mrp) return productData.mrp;
-    const size = sizeOptions.find(s => s.name === selectedSize);
-    return size ? size.price : 150;
+    
+   
   };
 
   const handleQuantityChange = (delta) => {
@@ -327,7 +354,7 @@ export default function ShopProductDetails() {
                     <img
                       src={img || '/api/placeholder/80/80'}
                       alt={`View ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         e.target.src = '/api/placeholder/80/80';
                       }}
@@ -377,7 +404,7 @@ export default function ShopProductDetails() {
 
 
                   <div className="flex items-center gap-2">
-{/* 
+                    {/* 
                     Here is the svg icon and stock text */}
 
 
@@ -395,15 +422,24 @@ export default function ShopProductDetails() {
                 {/* Price Card */}
                 <div className="rounded-lg ">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-                    <div className="text-2xl font-extrabold text-zinc-900">BDT {formatMoney(currentPrice)} TK</div>
-                    {/* {comparePrice && (
-                      <>
-                        <div className="text-sm text-gray-500 line-through">BDT {formatMoney(comparePrice)} TK</div>
-                        {percentOff > 0 && (
-                          <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-full">{percentOff}% OFF</span>
-                        )}
-                      </>
-                    )} */}
+                    {/* Show MRP for all users */}
+                    {(product?.product?.mrp || product?.mrp) && (
+                      <div className="text-2xl font-extrabold text-zinc-900">
+                        MRP: BDT {formatMoney(product?.product?.mrp || product?.mrp)} TK
+                      </div>
+                    )}
+                    
+                    {/* Show retailer price only for shop owners */}
+                    {currentUser?.role === 'shop_owner' && (product?.product?.retailer_price || product?.retailer_price) && (
+                      <div className="text-lg font-semibold text-green-600">
+                        Retailer: BDT {formatMoney(product?.product?.retailer_price || product?.retailer_price)} TK
+                      </div>
+                    )}
+                    
+                    {/* Fallback if no MRP available */}
+                    {!(product?.product?.mrp || product?.mrp) && (
+                      <div className="text-2xl font-extrabold text-zinc-900">BDT {formatMoney(currentPrice)} TK</div>
+                    )}
                   </div>
                   <div className="text-xs text-green-700 font-semibold mt-1">Order now and get it soon</div>
                 </div>
@@ -450,33 +486,46 @@ export default function ShopProductDetails() {
               </div>
 
               {/* Product Description - Moved below buttons */}
-              {(product?.description || product?.product?.description) && (
+
+              {product?.description && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold text-gray-900">Product Description</h3>
-                    <button
-                      onClick={() => setShowDescription(!showDescription)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
-                    >
-                      <span>{showDescription ? 'Hide' : 'Show'} Details</span>
-                      <svg 
-                        className={`w-4 h-4 transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+                    {descriptionIsLong && (
+                      <button
+                        onClick={() => setShowDescription(!showDescription)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                        aria-expanded={showDescription}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                        <span>{showDescription ? 'Show less' : 'Show more'}</span>
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-200 ${showDescription ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
-                  {showDescription && (
-                    <div
-                      className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 text-gray-700 animate-fadeIn"
-                      dangerouslySetInnerHTML={{ __html: product?.description || product?.product?.description }}
-                    />
-                  )}
+                  <div
+                    className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 animate-fadeIn"
+                    style={descriptionIsLong && !showDescription ? {
+                      display: '-webkit-box',
+                      WebkitLineClamp: 4,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    } : undefined}
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 </div>
               )}
+
+
+
+
             </div>
           </div>
         </div>

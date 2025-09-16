@@ -157,25 +157,6 @@ export default function Auth() {
     setError('');
     
     if (activeTab === 'signup' && signupStep === 'form') {
-      // Validate signup form
-      if (!formData.phone || !formData.password) {
-        setError('Please fill all required fields');
-        return;
-      }
-
-      // Validate phone number format (Bangladesh format: 01XXXXXXXXX)
-      const phoneRegex = /^01[3-9]\d{8}$/;
-      if (!phoneRegex.test(formData.phone)) {
-        setError('Please enter a valid phone number (01XXXXXXXXX)');
-        return;
-      }
-
-      // Validate password length
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters long');
-        return;
-      }
-      
       try {
         setLoading(true);
         console.log('Starting registration with phone:', formData.phone);
@@ -188,18 +169,14 @@ export default function Auth() {
         
       } catch (error) {
         console.error('Registration error:', error);
+        console.log('Error details:', error);
+        
         setError(error.message);
       } finally {
         setLoading(false);
       }
       
     } else if (activeTab === 'signup' && signupStep === 'otp') {
-      // Validate and submit OTP
-      if (!formData.otp || formData.otp.length !== 6) {
-        setError('Please enter valid 6-digit OTP');
-        return;
-      }
-      
       try {
         setLoading(true);
         console.log('Starting OTP verification with phone:', formData.phone, 'OTP:', formData.otp);
@@ -228,12 +205,6 @@ export default function Auth() {
     e.preventDefault();
     setError('');
     
-    // Validate login form
-    if (!formData.phone || !formData.password) {
-      setError('Please fill all required fields');
-      return;
-    }
-
     try {
       setLoading(true);
       console.log('Starting login with phone:', formData.phone);
@@ -307,6 +278,7 @@ export default function Auth() {
       
     } catch (error) {
       console.error('Login error:', error);
+      console.log('Error details:', error);
       setError(error.message);
     } finally {
       setLoading(false);

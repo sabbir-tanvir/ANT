@@ -1,17 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { isAuthenticated, getCurrentUser } from '../utils/auth.js';
 
 // ProductCard component
 // Props:
 // - imageSrc: string
 // - name: string (product name)  
-// - price: number
+// - price: number (fallback price)
+// - brand: string (product brand)
+// - category: string (product category)
 // - to?: string (link to details)
 // - onView?: () => void (optional click handler if no link)
 // - compact?: boolean (default false)
 // - showOrderButton?: boolean (show order button for shop owners)
 // - onOrder?: (product) => void (order button handler)
-// - product?: object (product data for order functionality)
+// - product?: object (product data with mrp, retailer_price, etc. for role-based pricing)
+//
+// Features:
+// - Automatic user role detection from localStorage
+// - Shop owners see retailer_price with discount % if cheaper than MRP
+// - Regular users see MRP or fallback price
+// - Responsive design with compact/normal modes
 export default function ProductCard({
   imageSrc = 'https://placehold.co/160x120',
   name = 'Product name',
@@ -25,6 +34,32 @@ export default function ProductCard({
   onOrder,
   product,
 }) {
+  const [userRole, setUserRole] = useState(null);
+
+  // Detect user role (shop_owner vs others/guest)
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const user = getCurrentUser();
+      setUserRole(user?.role || null);
+    } else {
+      setUserRole(null);
+    }
+  }, []);
+
+  // Helper function to format money
+  const formatMoney = (amount) => {
+    if (amount == null || isNaN(amount)) return '0.00';
+    const num = Number(amount);
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // Helper function to get current price based on user role
+  const getCurrentPrice = () => {
+    if (userRole === 'shop_owner' && product?.retailer_price) {
+      return product.retailer_price;
+    }
+    return product?.mrp || product?.price || price;
+  };
   return (
     <div className={
       compact
@@ -61,8 +96,27 @@ export default function ProductCard({
           >
             {name}
           </h3>
-          <div className={compact ? 'text-lg font-bold text-green-600 whitespace-nowrap' : 'text-xl font-bold text-green-600 whitespace-nowrap'}>
-            ৳{price}
+          <div className="flex flex-col items-end">
+            {userRole === 'shop_owner' &&
+            product?.retailer_price &&
+            product?.mrp &&
+            product.retailer_price < product.mrp ? (
+              <div className="flex flex-col items-end gap-1">
+                <div className={compact ? 'text-lg font-bold text-green-600 whitespace-nowrap' : 'text-xl font-bold text-green-600 whitespace-nowrap'}>
+                  ৳{formatMoney(product.retailer_price)}
+                </div>
+                <div className={compact ? 'text-xs text-gray-500 line-through whitespace-nowrap' : 'text-sm text-gray-500 line-through whitespace-nowrap'}>
+                  ৳{formatMoney(product.mrp)}
+                </div>
+                <div className={compact ? 'text-xs text-green-600 font-semibold whitespace-nowrap' : 'text-sm text-green-600 font-semibold whitespace-nowrap'}>
+                  ({Math.round(((product.mrp - product.retailer_price) / product.mrp) * 100)}% OFF)
+                </div>
+              </div>
+            ) : (
+              <div className={compact ? 'text-lg font-bold text-green-600 whitespace-nowrap' : 'text-xl font-bold text-green-600 whitespace-nowrap'}>
+                ৳{getCurrentPrice() ? formatMoney(getCurrentPrice()) : '0.00'}
+              </div>
+            )}
           </div>
         </div>
 

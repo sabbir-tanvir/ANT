@@ -572,7 +572,7 @@ export default function Product() {
                 <div>
                   <h4 className="font-semibold text-gray-900">{selectedProduct.name}</h4>
                   <p className="text-sm text-gray-500">{selectedProduct.brand}</p>
-                  <p className="text-lg font-bold text-green-600">৳{selectedProduct.price}</p>
+                  <p className="text-lg font-bold text-green-600">৳{selectedProduct.retailer_price}</p>
                 </div>
               </div>
             </div>
@@ -618,7 +618,7 @@ export default function Product() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total Amount:</span>
                 <span className="text-lg font-bold text-green-600">
-                  ৳{(selectedProduct.price * orderQuantity).toFixed(2)}
+                  ৳{(selectedProduct.retailer_price * orderQuantity).toFixed(2)}
                 </span>
               </div>
             </div>

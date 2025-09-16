@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Api_Base_Url } from '../config/api';
 import { isAuthenticated, getCurrentUser } from '../utils/auth.js';
-import ScanbotSDK from 'scanbot-web-sdk/ui';
+import QRScanner from '../components/QRScanner';
 
 export default function ProductDetails() {
     const [product, setProduct] = useState(null);
@@ -20,24 +20,30 @@ export default function ProductDetails() {
     const [orderLoading, setOrderLoading] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
 
+    // QR Scanner state
+    const [showQRScanner, setShowQRScanner] = useState(false);
+
+    // Hold-to-confirm state
+    const [showHold, setShowHold] = useState(false);
+    const [holdProgress, setHoldProgress] = useState(0); // 0-100
+    const holdTimerRef = useRef(null);
+    const holdStartRef = useRef(null);
+    const HOLD_DURATION = 2000; // ms to complete hold
+    const PROGRESS_RADIUS = 54;
+    const CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
+
     const params = useParams();
     const navigate = useNavigate();
-    const sdkInitializedRef = useRef(false);
 
     // Images will come from API (product.images); keep a safe fallback
     const productImages = Array.isArray(product?.images) && product.images.length
         ? product.images
         : (product?.image ? [product.image] : ['https://placehold.co/600x600']);
 
-    const _sizeOptions = [
-        { name: 'Big size', price: 150 },
-        { name: 'Medium size', price: 200 },
-        { name: 'Small size', price: 250 }
-    ];
 
-    const _volumeOptions = ['1000ml', '800ml', '500ml', '250ml'];
 
-        // Description helpers (approximate 4 lines or ~50+ words)
+
+    // Description helpers (approximate 4 lines or ~50+ words)
     const descriptionHtml = product?.description || '';
     const descriptionPlain = useMemo(() => {
         if (!descriptionHtml) return '';
@@ -73,93 +79,30 @@ export default function ProductDetails() {
         }
     }, []);
 
-    // Initialize Scanbot SDK once (trial mode by default)
+    // Cleanup hold timer on unmount
     useEffect(() => {
-        let mounted = true;
-        const init = async () => {
-            if (sdkInitializedRef.current) return;
-            try {
-                await ScanbotSDK.initialize({
-                    licenseKey: "", // optional: leave empty for 60s per session trial
-                    enginePath: "/wasm/", // we copied wasm assets to public/wasm
-                });
-                if (mounted) sdkInitializedRef.current = true;
-            } catch (e) {
-                console.warn('Scanbot SDK init failed:', e);
-            }
+        return () => {
+            if (holdTimerRef.current) clearInterval(holdTimerRef.current);
         };
-        init();
-        return () => { mounted = false; };
     }, []);
 
-    // Open barcode/QR scanner and navigate to scanned shop URL immediately
-    const startShopScanner = async () => {
-        try {
-            // Ensure SDK is initialized
-            if (!sdkInitializedRef.current) {
-                await ScanbotSDK.initialize({ licenseKey: "", enginePath: "/wasm/" });
-                sdkInitializedRef.current = true;
-            }
-
-            const config = new ScanbotSDK.UI.Config.BarcodeScannerScreenConfiguration();
-
-            // Optional minimal UX tuning
-            config.userGuidance.title.text = "Point camera at the shop QR";
-            config.topBar.mode = "GRADIENT";
-
-            const result = await ScanbotSDK.UI.createBarcodeScanner(config);
-            if (result && result.items && result.items.length > 0) {
-                // Prefer first item text
-                const text = result.items[0]?.barcode?.text || result.items[0]?.text || "";
-                if (typeof text === 'string' && text.length > 0) {
-                    // Accept only URLs to our shops, fallback to try navigating if it's a valid http(s) URL
-                    const trimmed = text.trim();
-                    const isHttp = /^https?:\/\//i.test(trimmed);
-                    if (isHttp) {
-                        // If it's a relative path in the QR, normalize
-                        try {
-                            const url = new URL(trimmed, window.location.origin);
-                            // If it matches /shops/:id navigate within SPA, else fallback to full redirect
-                            const shopsMatch = url.pathname.match(/^\/shops\/(\d+)/);
-                            if (shopsMatch) {
-                                navigate(`/shops/${shopsMatch[1]}`);
-                            } else {
-                                // external or unexpected path -> hard redirect
-                                window.location.href = url.toString();
-                            }
-                            return;
-                        } catch {
-                            // If URL ctor fails, try SPA navigation directly
-                            navigate(trimmed);
-                            return;
-                        }
-                    }
-
-                    // If QR contains a relative path like /shops/6
-                    if (trimmed.startsWith('/shops/')) {
-                        navigate(trimmed);
-                        return;
-                    }
-
-                    // Last resort: try to extract shop id from plain text
-                    const idMatch = trimmed.match(/shops\/(\d+)/);
-                    if (idMatch) {
-                        navigate(`/shops/${idMatch[1]}`);
-                        return;
-                    }
-
-                    toast.error('Scanned code is not a valid shop link');
-                } else {
-                    toast.error('No readable QR content');
-                }
-            } else {
-                // Scanner closed without result — do nothing
-            }
-        } catch (err) {
-            console.error('Scanner error:', err);
-            toast.error('Failed to open scanner');
-        }
+    // Open QR scanner
+    const startShopScanner = () => {
+        setShowQRScanner(true);
     };
+
+    // Close QR scanner
+    const closeQRScanner = () => {
+        setShowQRScanner(false);
+    };
+    useEffect(() => {
+        if (isAuthenticated()) {
+            const user = getCurrentUser();
+            setCurrentUser(user);
+        } else {
+            setCurrentUser(null);
+        }
+    }, []);
 
     if (!product) {
         return (
@@ -169,15 +112,82 @@ export default function ProductDetails() {
         );
     }
 
+    const formatMoney = (n) => {
+        if (n == null || isNaN(n)) return '0.00';
+        const num = Number(n);
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    // Detect user role
+
+
     const getCurrentPrice = () => {
-        if (!product) return 0;
-        const priceStr = product.retailer_price ?? product.mrp ?? product.price ?? 0;
-        const price = parseFloat(priceStr);
-        return Number.isFinite(price) ? price : 0;
+        // Handle nested product structure
+        const productData = product?.product || product;
+
+        // For shop owners, show retailer price if available, otherwise MRP
+        if (currentUser?.role === 'shop_owner') {
+            if (productData?.retailer_price) return productData.retailer_price;
+        }
+
+        // For all users (including shop owners if no retailer price), show MRP
+        if (productData?.mrp) return productData.mrp;
+
+
     };
 
     const _handleQuantityChange = (delta) => {
         _setQuantity(prev => Math.max(1, prev + delta));
+    };
+
+    // Hold-to-confirm functions
+    const openHoldOverlay = () => {
+        if (!currentUser || currentUser.role !== 'shop_owner') {
+            toast.error('Only shop owners can place orders');
+            return;
+        }
+        if (!product) {
+            toast.error('Product information not available');
+            return;
+        }
+        // Reset progress
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
+        setShowHold(true);
+    };
+
+    const startHold = () => {
+        if (orderLoading) return;
+        holdStartRef.current = performance.now();
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        holdTimerRef.current = setInterval(() => {
+            const now = performance.now();
+            const elapsed = now - (holdStartRef.current || now);
+            const p = Math.min(100, Math.round((elapsed / HOLD_DURATION) * 100));
+            setHoldProgress(p);
+            if (p >= 100) {
+                clearInterval(holdTimerRef.current);
+                holdTimerRef.current = null;
+                setTimeout(() => {
+                    setShowHold(false);
+                    handleDirectOrder();
+                }, 120);
+            }
+        }, 30);
+    };
+
+    const cancelHold = () => {
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
     };
 
     // Order functionality (modal currently not used for customer BUY NOW flow)
@@ -579,7 +589,7 @@ export default function ProductDetails() {
                                         <img
                                             src={img}
                                             alt={`View ${index + 1}`}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-contain"
                                             onError={(e) => { e.currentTarget.src = 'https://placehold.co/80x80'; }}
                                         />
                                     </button>
@@ -603,127 +613,38 @@ export default function ProductDetails() {
                                     <span className="text-black text-sm">Category: <span className="text-green-600 font-medium">{product?.category || 'Unavailable'}</span></span>
                                 </div>
 
-                                {/* Stock Status */}
-                                {/* <div className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 512 512"
-                      className="w-4 h-4 flex-shrink-0"
-                      aria-hidden="true"
-                    >
-                      <g>
-                        <path fill="#eab14d" d="M250.775 196.73H101.909V13.251a5.558 5.558 0 0 1 5.558-5.558h137.75a5.558 5.558 0 0 1 5.558 5.558z"></path>
-                        <path fill="#e49542" d="M233.562 7.693V196.73h17.214V13.251a5.558 5.558 0 0 0-5.558-5.558z"></path>
-                        <path fill="#df6b57" d="M185.754 50.521H166.93a4.476 4.476 0 0 1-4.476-4.476V7.693h27.777v38.353a4.477 4.477 0 0 1-4.477 4.475z"></path>
-                        <path fill="#f1cb86" d="M421.689 360.519H193.556V126.73h222.575a5.558 5.558 0 0 1 5.558 5.558z"></path>
-                        <path fill="#ecbe6b" d="M404.476 126.73v233.789h17.214v-228.23a5.558 5.558 0 0 0-5.558-5.558h-11.656z"></path>
-                        <path fill="#365e7d" d="M317.035 169.558H298.21a4.476 4.476 0 0 1-4.476-4.476V126.73h27.777v38.353a4.476 4.476 0 0 1-4.476 4.475z"></path>
-                        <path fill="#eab14d" d="M276.366 504.308H7.5V326.077a5.558 5.558 0 0 1 5.558-5.558h263.308z"></path>
-                        <path fill="#e49542" d="M259.153 320.519h17.214v183.789h-17.214z"></path>
-                        <path fill="#365e7d" d="M151.345 363.347H132.52a4.476 4.476 0 0 1-4.476-4.476v-38.353h27.777v38.353a4.476 4.476 0 0 1-4.476 4.476z"></path>
-                        <path fill="#eab14d" d="M504.5 504.308H276.366V360.519h222.575a5.558 5.558 0 0 1 5.558 5.558v138.231z"></path>
-                        <path fill="#e49542" d="M487.286 360.519v143.789H504.5v-138.23a5.558 5.558 0 0 0-5.558-5.558h-11.656z"></path>
-                        <path fill="#df6b57" d="M399.845 403.347H381.02a4.476 4.476 0 0 1-4.476-4.476v-38.353h27.777v38.353a4.476 4.476 0 0 1-4.476 4.476z"></path>
-                        <path fill="#f1cb86" d="M193.556 320.519H44.69v-118.23a5.558 5.558 0 0 1 5.558-5.558h143.308z"></path>
-                        <path fill="#ecbe6b" d="M176.342 196.73h17.214v123.789h-17.214z"></path>
-                        <path fill="#df6b57" d="M128.535 239.558H109.71a4.476 4.476 0 0 1-4.476-4.476V196.73h27.777v38.353a4.476 4.476 0 0 1-4.476 4.475z"></path>
-                        <path d="M498.942 353.018H429.19V238.274c0-4.143-3.357-7.5-7.5-7.5s-7.5 3.357-7.5 7.5v114.744H283.867v-32.5c0-4.143-3.357-7.5-7.5-7.5h-75.311V134.229h85.179v30.854c0 6.604 5.372 11.976 11.976 11.976h18.824c6.604 0 11.977-5.372 11.977-11.976v-30.854h85.179v74.059c0 4.143 3.357 7.5 7.5 7.5s7.5-3.357 7.5-7.5v-76c0-7.2-5.858-13.059-13.059-13.059H258.277V13.251c0-7.2-5.858-13.059-13.059-13.059h-137.75c-7.201 0-13.059 5.858-13.059 13.059v47.416c0 4.143 3.358 7.5 7.5 7.5s7.5-3.357 7.5-7.5V15.192h45.545v30.854c0 6.604 5.372 11.976 11.976 11.976h18.825c6.604 0 11.976-5.372 11.976-11.976V15.192h45.545v104.037h-49.719a7.5 7.5 0 0 0-7.5 7.5v62.5H109.41V90.653c0-4.143-3.358-7.5-7.5-7.5s-7.5 3.357-7.5 7.5v98.577H50.248c-7.201 0-13.059 5.857-13.059 13.058v110.73H13.058c-7.2 0-13.058 5.858-13.058 13.059v178.23a7.5 7.5 0 0 0 7.5 7.5h79.416c4.142 0 7.5-3.357 7.5-7.5s-3.358-7.5-7.5-7.5H15V328.018h105.545v30.853c0 6.604 5.373 11.977 11.976 11.977h18.824c6.604 0 11.976-5.373 11.976-11.977v-30.853h105.545v168.789H116.902c-4.142 0-7.5 3.357-7.5 7.5s3.358 7.5 7.5 7.5h387.597c4.143 0 7.5-3.357 7.5-7.5v-138.23c.001-7.2-5.857-13.059-13.057-13.059zM182.73 43.021h-12.776V15.193h12.776zm131.281 91.208v27.829h-12.776v-27.829zM112.734 204.23h12.777v27.828h-12.777zm-60.545 0h45.545v30.853c0 6.604 5.373 11.976 11.976 11.976h18.825c6.604 0 11.976-5.372 11.976-11.976V204.23h45.545v108.788H52.189zm96.132 151.617h-12.776v-27.829h12.776zm248.501 12.171v27.829h-12.777v-27.829zM497 496.807H283.867V368.018h85.178v30.853c0 6.604 5.373 11.977 11.977 11.977h18.824c6.604 0 11.977-5.373 11.977-11.977v-30.853h85.178v128.789z" fill="#000000"></path>
-                      </g>
-                    </svg>
-                    <span className="text-l text-black">
-                      {product?.stock && product?.stock !== '0' ? 'In stock' : 'Out of stock'}
-                    </span>
-                  </div> */}
 
-                                {/* Shipping Info */}
-                                {/* <div className="mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                                        </svg>
-                                        <span className="text-sm">Ships from <span className="font-bold">{product.shippedFrom}</span></span>
-                                    </div>
-                                </div> */}
 
-                                {/* Badges */}
-                                {/* <div className="flex flex-wrap gap-2 mt-3">
-                                    <span className="bg-green-100 text-green-600 text-xs px-3 py-1 rounded-md uppercase">free shipping</span>
-                                    <span className="bg-red-100 text-red-600 text-xs px-3 py-1 rounded-md uppercase">free gift</span>
-                                </div> */}
                             </div>
 
-                            {/* Size Selection */}
-                            {/* <div className="mb-6 border-t border-b  py-4"> */}
-                            {/* <div className="mb-4">
-                                    <span className="text-sm font-bold text-black uppercase">Size: </span>
-                                    <span className="text-sm text-stone-500">{selectedSize}</span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {sizeOptions.map((size) => (
-                                        <button
-                                            key={size.name}
-                                            onClick={() => setSelectedSize(size.name)}
-                                            className={`p-3 rounded-lg border-2 flex items-center gap-3 ${
-                                                selectedSize === size.name ? 'border-green-600' : 'border-stone-300'
-                                            }`}
-                                        >
-                                            <div className="w-8 h-8 flex-shrink-0">
-                                                <img src="https://placehold.co/32x32" alt={size.name} className="w-full h-full object-contain" />
-                                            </div>
-                                            <div className="text-left">
-                                                <div className="text-xs text-black">{size.name}</div>
-                                                <div className="text-xs font-bold text-black">{size.price}TK</div>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div> */}
 
-                            {/* Volume Selection */}
-                            {/* <div className="mt-6">
-                                    <span className="text-sm font-bold text-black uppercase">Volume: </span>
-                                    <span className="text-sm text-stone-500">{selectedVolume}</span>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {volumeOptions.map((volume) => (
-                                            <button
-                                                key={volume}
-                                                onClick={() => setSelectedVolume(volume)}
-                                                className={`px-4 py-2 rounded-lg border-2 text-xs font-bold ${
-                                                    selectedVolume === volume 
-                                                        ? 'border-green-600 text-black' 
-                                                        : 'border-stone-300 text-stone-300'
-                                                }`}
-                                            >
-                                                {volume}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div> */}
-                            {/* </div> */}
                             <div className="space-y-4">
                                 {/* Price */}
-                                <div>
-                                    <div className="text-xl font-extrabold text-zinc-800">BDT {getCurrentPrice().toLocaleString('en-US')} TK</div>
+                                {<div>
+                                    {userRole === 'shop_owner' &&
+                                        product?.retailer_price &&
+                                        product?.mrp  ? (
+                                        <div className="flex items-baseline gap-3">
+                                            <div className="text-2xl font-extrabold text-zinc-800">
+                                                BDT {formatMoney(product.retailer_price)} TK
+                                            </div>
+                                            <div className="text-sm text-gray-500 line-through">
+                                                BDT {formatMoney(product.mrp)} TK
+                                            </div>
+                                            <div className="text-sm text-green-600 font-semibold">
+                                                ({Math.round(((product.mrp - product.retailer_price) / product.mrp) * 100)}% OFF)
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-2xl font-extrabold text-zinc-800">
+                                            BDT {getCurrentPrice() ? formatMoney(getCurrentPrice()) : '0.00'} TK
+                                        </div>
+                                    )}
                                 </div>
+                                }
+                               
 
-                                {/* Quantity */}
-                                {/* <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-zinc-800">QTY:</span>
-                                    <div className="flex items-center border border-neutral-400 rounded">
-                                        <button
-                                            onClick={() => handleQuantityChange(-1)}
-                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
-                                        >
-                                            <span className="text-lg font-bold">−</span>
-                                        </button>
-                                        <span className="px-3 py-1 text-sm font-medium text-zinc-800">{quantity}</span>
-                                        <button
-                                            onClick={() => handleQuantityChange(1)}
-                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
-                                        >
-                                            <span className="text-lg font-bold">+</span>
-                                        </button>
-                                    </div>
-                                </div> */}
+
 
                                 {/* Action Buttons */}
                                 {userRole === 'shop_owner' ? (
@@ -751,7 +672,7 @@ export default function ProductDetails() {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={handleDirectOrder}
+                                            onClick={openHoldOverlay}
                                             disabled={orderLoading}
                                             className="w-full cursor-pointer py-3 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
@@ -811,10 +732,10 @@ export default function ProductDetails() {
                                         </div>
                                         <div
                                             className="prose prose-sm max-w-none [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-400 [&_td]:p-2 [&_th]:border [&_th]:border-gray-400 [&_th]:p-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-4 [&_p]:mb-2 animate-fadeIn"
-                                            style={descriptionIsLong && !showDescription ? { 
-                                                display: '-webkit-box', 
-                                                WebkitLineClamp: 4, 
-                                                WebkitBoxOrient: 'vertical', 
+                                            style={descriptionIsLong && !showDescription ? {
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 4,
+                                                WebkitBoxOrient: 'vertical',
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis'
                                             } : undefined}
@@ -914,6 +835,67 @@ export default function ProductDetails() {
                     </div>
                 </div>
             )}
+
+            {/* Hold-to-confirm overlay for BUY NOW */}
+            {showHold && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+                    <div className="w-full max-w-sm">
+                        <div className="bg-white rounded-2xl p-6 text-center relative shadow-xl">
+                            <button
+                                type="button"
+                                aria-label="Close"
+                                onClick={() => { cancelHold(); setShowHold(false); }}
+                                className="absolute right-3 top-3 p-2 rounded-full text-gray-500 hover:bg-gray-100"
+                            >
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                            <h3 className="text-base font-semibold text-gray-900 mb-1">Hold to Confirm</h3>
+                            <p className="text-xs text-gray-500 mb-4">Confirm purchase of {_quantity} × {(product?.name || 'Product')}</p>
+                            <div className="text-sm font-medium mb-4">Total: <span className="text-green-600 font-semibold">BDT {formatMoney(getCurrentPrice() * _quantity)} TK</span></div>
+                            <div
+                                className="mx-auto relative w-40 h-40 select-none"
+                                onMouseDown={startHold}
+                                onMouseUp={cancelHold}
+                                onMouseLeave={cancelHold}
+                                onTouchStart={(e) => { e.preventDefault(); startHold(); }}
+                                onTouchEnd={cancelHold}
+                                onTouchCancel={cancelHold}
+                            >
+                                <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="54" stroke="#E5E7EB" strokeWidth="10" fill="none" />
+                                    <circle
+                                        cx="60" cy="60" r="54"
+                                        stroke="#10B981" strokeWidth="10" fill="none" strokeLinecap="round"
+                                        style={{
+                                            strokeDasharray: CIRCUMFERENCE,
+                                            strokeDashoffset: CIRCUMFERENCE - (holdProgress / 100) * CIRCUMFERENCE,
+                                            transition: 'stroke-dashoffset 30ms linear'
+                                        }}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <svg className="w-16 h-16 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 11.5c2.5 0 3.5 2 3.5 4.5M8 11c1-1.5 2.5-2 4-2s3 .5 4 2M6.5 9.5c1.5-2 3.5-3 5.5-3s4 .8 5.5 3M5 8c2-3 4.5-4 7-4s5 1 7 4M9.5 13.5c.5 1 .5 2 .5 3M12 13c1 1.5 1 3 1 4.5" />
+                                    </svg>
+                                </div>
+                                <div className="absolute bottom-3 inset-x-0 text-[11px] text-gray-500">
+                                    {holdProgress < 100 ? `Hold ${Math.ceil((HOLD_DURATION * (1 - holdProgress / 100)) / 1000)}s` : 'Release'}
+                                </div>
+                            </div>
+                            <div className="mt-4 text-[11px] text-gray-500">Keep holding until the circle completes</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Scanner Modal */}
+            <QRScanner 
+                isOpen={showQRScanner}
+                onClose={closeQRScanner}
+            />
         </section>
     );
 }

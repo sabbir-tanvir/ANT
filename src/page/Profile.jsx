@@ -482,15 +482,15 @@ export default function Profile() {
   }
 
   return (
-    <section className="min-h-[80vh] py-8 px-4 md:px-6 bg-stone-100">
+    <section className="min-h-[80vh] py-4 md:py-8 px-4 md:px-6 bg-stone-100">
       <div className="max-w-[1360px] mx-auto">
-        <div className="bg-stone-100 rounded-[10px] p-4 md:p-8">
+        <div className="bg-stone-100 rounded-[10px] p-0 md:p-8">
           {/* Responsive container: stack on mobile, side-by-side on md+ */}
           <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
           <div className="md:w-72 w-full md:min-h-[640px] bg-neutral-50 rounded-xl p-5 flex flex-col">
             <div className="relative group mb-4">
-              <div className="w-full aspect-[214/220] bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200">
+              <div className="w-32 h-32 md:w-full md:h-auto aspect-square bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200 mx-auto md:mx-0">
                 <img
                   className="w-full h-full object-cover"
                   src={imagePreview || profile?.user_img || 'https://placehold.co/214x220'}
@@ -522,25 +522,25 @@ export default function Profile() {
                 />
               </div>
               {imageFile && activeSection === 'account' && (
-                <p className="text-xs text-green-600 mt-1">New image selected (will save on update)</p>
+                <p className="text-xs text-green-600 mt-1 text-center">New image selected (will save on update)</p>
               )}
             </div>
-            <div className="mb-1 text-black text-lg font-bold leading-tight truncate">{profile?.name || 'User'}</div>
-            <div className="text-stone-700 text-sm mb-1">{user?.role ? user.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Customer'}</div>
-            <div className="text-stone-500 text-xs mb-4">{profile?.phone || formData.phone}</div>
-            <div className="flex flex-col gap-1 mt-2 flex-1">
+            <div className="mb-1 text-black text-lg font-bold leading-tight truncate text-center md:text-left">{profile?.name || 'User'}</div>
+            <div className="text-stone-700 text-sm mb-1 text-center md:text-left">{user?.role ? user.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Customer'}</div>
+            <div className="text-stone-500 text-xs mb-4 text-center md:text-left">{profile?.phone || formData.phone}</div>
+            <div className="flex flex-row md:flex-col gap-1 mt-2 flex-1 overflow-x-auto md:overflow-visible no-scrollbar">
               {sidebarItems.map(item => (
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition flex items-center justify-between ${activeSection === item.id ? 'bg-green-600 text-white shadow' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                  className={`min-w-[90px] md:min-w-full text-left px-2 py-2 rounded-lg text-xs md:text-sm font-medium transition flex items-center justify-between md:justify-between ${activeSection === item.id ? 'bg-green-600 text-white shadow' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
                 >
                   <span>{item.label}</span>
                   <span className="text-xs">›</span>
                 </button>
               ))}
             </div>
-            <div className="mt-6">
+            <div className="mt-6 md:mt-auto">
               <button
                 onClick={handleLogout}
                 className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 rounded-lg flex items-center justify-center gap-2"

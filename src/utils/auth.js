@@ -106,6 +106,22 @@ export const removeTokens = () => {
 };
 
 /**
+ * High-level logout helper
+ * Clears tokens and broadcasts status change
+ */
+export const logout = () => {
+  try {
+    removeTokens();
+  } finally {
+    try {
+      window.dispatchEvent(new Event('userStatusChanged'));
+    } catch {
+      // ignore if window not available
+    }
+  }
+};
+
+/**
  * Store shop data in localStorage
  * @param {object} shopData - Shop data object
  */

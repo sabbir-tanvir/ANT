@@ -20,6 +20,8 @@ export default function WalletTransaction({ token }) {
 				headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
 			});
 			const { results = [], next = null, count = 0 } = res.data || {};
+			console.log(res.data);
+			
 			setCount(count);
 			setNext(next);
 			setItems(prev => reset ? results : [...prev, ...results]);

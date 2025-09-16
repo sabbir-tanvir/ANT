@@ -1,13 +1,16 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { getCurrentUser, isAuthenticated } from '../../utils/auth.js';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { getCurrentUser, isAuthenticated, logout } from '../../utils/auth.js';
 import { useSiteSettings } from '../../config/sitesetting.js';
 
 function Navbar() {
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
   const settings = useSiteSettings();
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
+  const profileRef = useRef(null);
 
   const resolveAsset = (url, fallback) => {
     if (!url) return fallback;
@@ -15,10 +18,8 @@ function Navbar() {
     return `${window._env_?.BASE_URL || ''}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
-  // Check for user login status
   useEffect(() => {
     const checkUserStatus = () => {
-      // Check if user is authenticated with valid JWT token
       if (isAuthenticated()) {
         const currentUser = getCurrentUser();
         setUser(currentUser);
@@ -27,22 +28,77 @@ function Navbar() {
       }
     };
 
-    // Initial check
     checkUserStatus();
-
-    // Listen for storage changes (when user logs in/out in another tab)
     window.addEventListener('storage', checkUserStatus);
-
-    // Custom event listener for login/logout in same tab
     window.addEventListener('userStatusChanged', checkUserStatus);
-
     return () => {
       window.removeEventListener('storage', checkUserStatus);
       window.removeEventListener('userStatusChanged', checkUserStatus);
     };
   }, []);
 
-  // Dynamic navigation items based on user role
+  // Lock body scroll when menu open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  // Close menu on click outside or scroll
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      setOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [open]);
+
+  // Close profile dropdown on click outside or scroll
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const handleClickOutsideProfile = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    const handleScrollProfile = () => {
+      setProfileOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutsideProfile);
+    window.addEventListener('scroll', handleScrollProfile, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideProfile);
+      window.removeEventListener('scroll', handleScrollProfile, true);
+    };
+  }, [profileOpen]);
+
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    navigate('/');
+  };
+
   const getNavItems = () => {
     const baseItems = [
       { label: 'Training', to: '/training' },
@@ -51,7 +107,6 @@ function Navbar() {
     ];
 
     if (!user) {
-      // Guest/Not logged in users
       return [
         { label: 'Home', to: '/' },
         { label: 'Product', to: '/product' },
@@ -61,18 +116,15 @@ function Navbar() {
     }
 
     if (user.role === 'shop_owner') {
-      // Shop owner navigation
       return [
         { label: 'Home', to: '/' },
         { label: 'Product', to: '/product' },
         { label: 'Recharge', to: '/recharge' },
         { label: 'My Shop', to: '/myshop' },
-
         ...baseItems
       ];
     }
 
-    // Customer navigation (default for logged-in customers)
     return [
       { label: 'Home', to: '/' },
       { label: 'Product', to: '/product' },
@@ -82,7 +134,6 @@ function Navbar() {
   };
 
   const navItems = getNavItems();
-
   const baseLink = 'text-base font-semibold leading-tight transition-colors';
   const inactive = 'text-zinc-900 hover:text-green-600';
   const active = 'text-green-600';
@@ -90,9 +141,30 @@ function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur border-b border-gray-200">
       <nav className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+        <div className="flex h-16 items-center justify-between relative">
+          {/* Hamburger button (left) */}
+          <button
+            type="button"
+            className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600"
+            onClick={() => { setOpen((v) => !v); setProfileOpen(false); }}
+            aria-label="Toggle navigation menu"
+            aria-expanded={open}
+          >
+            {open ? (
+              // X icon
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              // Hamburger icon
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            )}
+          </button>
+
+          {/* Logo (center on mobile) */}
+          <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none flex items-center gap-2">
             <img
               className="w-10 h-10 rounded object-contain bg-transparent"
               src={resolveAsset(settings?.logo, '/ant.png')}
@@ -102,15 +174,43 @@ function Navbar() {
             <span className="sr-only">ANT</span>
           </Link>
 
+          {/* Profile / Login (right) */}
+          <div className="md:hidden flex items-center">
+            {user ? (
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen((p) => !p)}
+                  className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center focus:ring-2 focus:ring-green-600"
+                >
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-50">
+                    <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/auth"
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+              >
+                Log in / Register
+              </Link>
+            )}
+          </div>
+
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-10">
+          <div className="hidden md:flex items-center gap-10 ml-auto">
             <ul className="flex items-center gap-7">
               {navItems.map((item) => (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
                     className={({ isActive }) => `${baseLink} ${isActive ? active : inactive}`}
-                    onClick={() => setOpen(false)}
                   >
                     {item.label}
                   </NavLink>
@@ -118,95 +218,92 @@ function Navbar() {
               ))}
             </ul>
             {user ? (
-              // Profile Icon when logged in
-              <Link
-                to="/profile"
-                className="inline-flex items-center gap-2 whitespace-nowrap rounded-md p-1.5 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-600 transition-colors"
-                title={`Profile - ${user.name || user.phone || 'User'}`}
-              >
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen((p) => !p)}
+                  className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center focus:ring-2 focus:ring-green-600"
+                >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
-                </div>
-              </Link>
+                </button>
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-50">
+                    <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+                  </div>
+                )}
+              </div>
             ) : (
-              // Login/Register button when not logged in
               <Link
                 to="/auth"
-                className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-900 hover:bg-gray-50"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 25 24" fill="none" aria-hidden>
-                  <path d="M17.228 8.5C17.228 5.73858 14.9894 3.5 12.228 3.5C9.46661 3.5 7.22803 5.73858 7.22803 8.5C7.22803 11.2614 9.46661 13.5 12.228 13.5C14.9894 13.5 17.228 11.2614 17.228 8.5Z" stroke="#141B34" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M19.228 20.5C19.228 16.634 16.094 13.5 12.228 13.5C8.36204 13.5 5.22803 16.634 5.22803 20.5" stroke="#141B34" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="whitespace-nowrap">Log in / Register</span>
+                Log in / Register
               </Link>
             )}
           </div>
-
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={open}
-          >
-            {open ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            )}
-          </button>
         </div>
 
-        {/* Mobile nav panel */}
+        {/* Mobile overlay menu - starts below the navbar (top-16) so header stays interactive */}
         {open && (
-          <div className="md:hidden pb-4">
-            <ul className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    className={({ isActive }) => `block rounded px-3 py-2 ${baseLink} ${isActive ? active : inactive}`}
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </NavLink>
+          <div className="md:hidden">
+            {/* backdrop - closes on click */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setOpen(false)}
+            />
+
+            {/* sliding panel */}
+            <aside
+              ref={menuRef}
+              className="fixed top-12 left-0 bottom-0 w-64 p-4 z-50 transform transition-transform duration-300 ease-in-out translate-x-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+           
+            <nav>
+              <ul className="flex bg-white p-2 rounded-2xl flex-col gap-2">
+                {navItems.map((item) => (
+                  <li key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) => `block rounded px-3 py-2 ${baseLink} ${isActive ? active : inactive}`}
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </NavLink>
+                  </li>
+                ))}
+
+                <li className="mt-2">
+                  {user ? (
+                    <Link
+                      to="/profile"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-green-600 bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                      </svg>
+                      <span>Profile - {user?.name || user?.phone || 'User'}</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    >
+                      <span>Log in / Register</span>
+                    </Link>
+                  )}
                 </li>
-              ))}
-              <li>
-                {user ? (
-                  // Profile link for mobile
-                  <Link
-                    to="/profile"
-                    onClick={() => setOpen(false)}
-                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md border border-green-600 bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                    <span>Profile - {user.name || user.phone || 'User'}</span>
-                  </Link>
-                ) : (
-                  // Login/Register for mobile
-                  <Link
-                    to="/auth"
-                    onClick={() => setOpen(false)}
-                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-                  >
-                    <span>Log in / Register</span>
-                  </Link>
-                )}
-              </li>
-            </ul>
-          </div>
+
+              </ul>
+            </nav>
+          </aside>
+        </div>
         )}
+
       </nav>
     </header>
   );
