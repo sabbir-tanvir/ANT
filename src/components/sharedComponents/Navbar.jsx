@@ -6,11 +6,13 @@ import { useSiteSettings } from '../../config/sitesetting.js';
 function Navbar() {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
   const settings = useSiteSettings();
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const profileRef = useRef(null);
+  const mobileProfileRef = useRef(null);
 
   const resolveAsset = (url, fallback) => {
     if (!url) return fallback;
@@ -93,6 +95,29 @@ function Navbar() {
     };
   }, [profileOpen]);
 
+  // Close mobile profile dropdown on click outside or scroll
+  useEffect(() => {
+    if (!mobileProfileOpen) return;
+
+    const handleClickOutsideMobileProfile = (event) => {
+      if (mobileProfileRef.current && !mobileProfileRef.current.contains(event.target)) {
+        setMobileProfileOpen(false);
+      }
+    };
+
+    const handleScrollMobileProfile = () => {
+      setMobileProfileOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutsideMobileProfile);
+    window.addEventListener('scroll', handleScrollMobileProfile, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideMobileProfile);
+      window.removeEventListener('scroll', handleScrollMobileProfile, true);
+    };
+  }, [mobileProfileOpen]);
+
   const handleLogout = () => {
     logout();
     setUser(null);
@@ -146,7 +171,11 @@ function Navbar() {
           <button
             type="button"
             className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-600"
-            onClick={() => { setOpen((v) => !v); setProfileOpen(false); }}
+            onClick={() => { 
+              setOpen((v) => !v); 
+              setProfileOpen(false); 
+              setMobileProfileOpen(false); 
+            }}
             aria-label="Toggle navigation menu"
             aria-expanded={open}
           >
@@ -177,19 +206,35 @@ function Navbar() {
           {/* Profile / Login (right) */}
           <div className="md:hidden flex items-center">
             {user ? (
-              <div className="relative" ref={profileRef}>
+              <div className="relative" ref={mobileProfileRef}>
                 <button
-                  onClick={() => setProfileOpen((p) => !p)}
+                  onClick={() => setMobileProfileOpen((p) => !p)}
                   className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center focus:ring-2 focus:ring-green-600"
+                  type="button"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                 </button>
-                {profileOpen && (
+                {mobileProfileOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-50">
-                    <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
-                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+                    <Link 
+                      to="/profile" 
+                      className="block px-4 py-2 hover:bg-gray-100"
+                      onClick={() => setMobileProfileOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        handleLogout();
+                        setMobileProfileOpen(false);
+                      }} 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                      type="button"
+                    >
+                      Logout
+                    </button>
                   </div>
                 )}
               </div>

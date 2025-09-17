@@ -16,13 +16,13 @@ export const decodeJWT = (token) => {
 
     // Decode the payload (second part)
     const payload = parts[1];
-    
+
     // Add padding if needed for base64 decoding
     const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
-    
+
     // Decode base64 and parse JSON
     const decodedPayload = JSON.parse(atob(paddedPayload));
-    
+
     return decodedPayload;
   } catch (error) {
     console.error('Error decoding JWT:', error);
@@ -60,7 +60,7 @@ export const isTokenExpired = (token) => {
   if (!payload || !payload.exp) {
     return true;
   }
-  
+
   // exp is in seconds, Date.now() is in milliseconds
   const currentTime = Math.floor(Date.now() / 1000);
   return payload.exp < currentTime;
@@ -189,7 +189,17 @@ export const loginUser = async (username, password) => {
     body: JSON.stringify(requestBody),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || data.detail || 'Login failed');
+  console.log(data);
+
+  if (!res.ok) {
+    console.log(res);
+
+    let errorMessage = data.message || data.detail;
+    if (data.non_field_errors && Array.isArray(data.non_field_errors) && data.non_field_errors.length > 0) {
+      errorMessage = data.non_field_errors[0];
+    }
+    throw new Error(errorMessage);
+  }
   return data;
 };
 
@@ -200,7 +210,13 @@ export const registerUser = async (phone, password) => {
     body: JSON.stringify({ phone, password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Registration failed');
+  if (!res.ok) {
+    let errorMessage = data.message || data.detail;
+    if (data.non_field_errors && Array.isArray(data.non_field_errors) && data.non_field_errors.length > 0) {
+      errorMessage = data.non_field_errors[0];
+    }
+    throw new Error(errorMessage);
+  }
   return data;
 };
 

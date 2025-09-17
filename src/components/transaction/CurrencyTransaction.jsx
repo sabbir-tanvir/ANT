@@ -3,6 +3,24 @@ import axios from 'axios';
 import { Api_Base_Url } from '../../config/api.js';
 
 export default function CurrencyTransaction({ token }) {
+	// Format date and time
+	const formatDateTime = (dateString) => {
+		if (!dateString) return '';
+		try {
+			const date = new Date(dateString);
+			const options = {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: true
+			};
+			return date.toLocaleDateString('en-US', options);
+		} catch {
+			return dateString; // fallback to original if parsing fails
+		}
+	};
 	const [items, setItems] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
@@ -81,7 +99,7 @@ export default function CurrencyTransaction({ token }) {
 
 							</div>
 							<div className="text-[11px] text-gray-400 flex items-center justify-between">
-								<span>{tx.created_at}</span>
+								<span>{formatDateTime(tx.created_at)}</span>
 								<span className="font-semibold text-lg text-gray-800">৳{tx.amount}</span>
 							</div>
 						</div>

@@ -17,6 +17,7 @@ export default function Product() {
   const [view, setView] = useState("grid"); // "grid" or "list"
   
   // Backend pagination states
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -34,6 +35,17 @@ export default function Product() {
   const dropdownRef = useRef(null);
   const categoryBtnRef = useRef(null);
 
+  // Order functionality states
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [loading, setLoading] = useState(true);
+
+  const dropdownRef = useRef(null);
+  const categoryBtnRef = useRef(null);
   // Categories from product.category field
   const categories = useMemo(() => {
     const setVals = new Set();
@@ -63,6 +75,7 @@ export default function Product() {
     }
 
     setLoading(true);
+    setCurrentPage(1); // Reset to first page
     setProducts([]); // Reset products array
 
     // Fetch products based on current search term
@@ -138,6 +151,11 @@ export default function Product() {
     setFilteredProducts(result);
   }, [products, selectedCategory]);
 
+  // Reset visible items when filter/search changes
+  useEffect(() => {
+    // No need to reset items since we're using backend pagination
+  }, [filteredProducts]);
+
   // Load more products function
   const loadMoreProducts = async () => {
     if (!nextPageUrl || loadingMore) return;
@@ -167,6 +185,7 @@ export default function Product() {
         
         setNextPageUrl(next);
         setHasNextPage(!!next);
+        setCurrentPage(prev => prev + 1);
       }
     } catch (error) {
       console.error('Error loading more products:', error);
@@ -365,6 +384,9 @@ export default function Product() {
     }
   };
 
+
+
+
   return (
     <section className="min-h-screen py-8 px-4 md:px-6 bg-gray-50">
       <div className="max-w-[1360px] mx-auto">
@@ -460,9 +482,10 @@ export default function Product() {
 
           {/* Header with filters */}
           <div className="flex justify-between items-center px-8 mt-8 mb-8">
-            <div className="text-black text-sm font-semibold font-['Inter']">All product ({totalCount})</div>
+            <div className="text-black text-sm font-semibold font-['Inter']">All product ({filteredProducts.length})</div>
             <div className="flex justify-start items-center gap-4">
               {/* View Toggle */}
+
               <div className="flex bg-white border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setView("grid")}
@@ -487,10 +510,13 @@ export default function Product() {
                   </svg>
                 </button>
               </div>
+
             </div>
           </div>
 
           <div className="flex">
+            {/* Sidebar removed: category filter handled in top bar only */}
+
             {/* Products */}
             <div className="flex-1 p-6 pb-20">
               {/* Loading State */}
@@ -551,7 +577,7 @@ export default function Product() {
                 <div>
                   {view === "grid" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-6">
-                      {filteredProducts.map((p) => (
+                      {filteredProducts.slice(0, itemsToShow).map((p) => (
                         <ProductCard
                           key={p.id}
                           imageSrc={p.image}
@@ -569,7 +595,7 @@ export default function Product() {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-4">
-                      {filteredProducts.map((p) => (
+                      {filteredProducts.slice(0, itemsToShow).map((p) => (
                         <ListProductCard
                           key={p.id}
                           id={p.id}
@@ -585,24 +611,14 @@ export default function Product() {
                       ))}
                     </div>
                   )}
-                  {hasNextPage && (
+                  {itemsToShow < filteredProducts.length && (
                     <div className="flex justify-center py-6">
                       <button
                         type="button"
-                        onClick={loadMoreProducts}
-                        disabled={loadingMore}
-                        className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        onClick={() => setItemsToShow((prev) => Math.min(prev + 20, filteredProducts.length))}
+                        className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                       >
-                        {loadingMore ? (
-                          <>
-                            <svg className="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            Loading...
-                          </>
-                        ) : (
-                          'Load more'
-                        )}
+                        Load more
                       </button>
                     </div>
                   )}
@@ -616,7 +632,7 @@ export default function Product() {
 
       {/* Order Modal */}
       {showOrderModal && selectedProduct && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-5 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0  bg-opacity-40 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-gray-100 transform transition-all duration-300 scale-100">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Place Order</h3>

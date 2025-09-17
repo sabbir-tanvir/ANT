@@ -629,11 +629,9 @@ export default function ProductDetails() {
                                                 BDT {formatMoney(product.retailer_price)} TK
                                             </div>
                                             <div className="text-sm text-gray-500 line-through">
-                                                BDT {formatMoney(product.mrp)} TK
+                                                MRP {formatMoney(product.mrp)} TK
                                             </div>
-                                            <div className="text-sm text-green-600 font-semibold">
-                                                ({Math.round(((product.mrp - product.retailer_price) / product.mrp) * 100)}% OFF)
-                                            </div>
+                                            
                                         </div>
                                     ) : (
                                         <div className="text-2xl font-extrabold text-zinc-800">

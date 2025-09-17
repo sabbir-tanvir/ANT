@@ -114,6 +114,7 @@ export default function Recharge() {
         amount: amountStr,
         account_number: cashInForm.account,
         transaction_id: cashInForm.trxId,
+        payment_description: cashInForm.trxName,
         payment_method: cashInForm.method, // expects 'mobile_banking' or 'bank_transfer'
         shop: shopId,
       };
@@ -142,7 +143,7 @@ export default function Recharge() {
 
       // success
       toast.success('Cash In request submitted successfully');
-      setCashInForm({ account: '', amount: '', trxId: '', method: 'mobile_banking' });
+      setCashInForm({ account: '', amount: '', trxId: '', trxName: '', method: 'mobile_banking' });
     } catch (err) {
       console.error('Cashin error', err);
       setError(err.message || 'Something went wrong');
@@ -436,6 +437,20 @@ export default function Recharge() {
                     </svg>
                   </div>
                 </div>
+              </div>
+
+              {/* Transaction ID */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Payment Description</label>
+                <input
+                  type="text"
+                  name="trxName"
+                  value={cashInForm.trxName}
+                  onChange={onCashInChange}
+                  placeholder="Mobile Banking or Bank Name "
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  maxLength={16}
+                />
               </div>
 
               <button

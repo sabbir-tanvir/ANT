@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   storeTokens,
   getUserRole,
   getUserId,
@@ -15,6 +15,8 @@ import {
   updateUserProfile,
 } from '../utils/auth.js';
 import ForgotPassword from '../components/auth/ForgotPassword.jsx';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -171,7 +173,56 @@ export default function Auth() {
         console.error('Registration error:', error);
         console.log('Error details:', error);
         
-        setError(error.message);
+        if (error.message.includes('not verified')) {
+          // Account not verified, redirect to OTP verification step and resend OTP
+          setSignupStep('otp');
+          setOtpTimer(40);
+          setError('');
+          toast.info('Account not verified. Redirecting to OTP verification.', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+          try {
+            console.log('Resending OTP for phone:', formData.phone);
+            await resendSignupOTP(formData.phone);
+            console.log('OTP resent successfully');
+          } catch (otpError) {
+            console.error('Failed to resend OTP:', otpError);
+          }
+        } else if (error.message.toLowerCase().includes('phone') && error.message.toLowerCase().includes('exists')) {
+          // User already exists, redirect to login page
+          toast.info('User already exists. Redirecting to login page.', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+          setActiveTab('login');
+          setSignupStep('form');
+          setError('');
+        } else {
+          setError(error.message);
+          toast.error(error.message, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -279,7 +330,43 @@ export default function Auth() {
     } catch (error) {
       console.error('Login error:', error);
       console.log('Error details:', error);
-      setError(error.message);
+      if (error.message.includes('not verified')) {
+        // Account not verified, redirect to OTP verification
+        setActiveTab('signup');
+        setSignupStep('otp');
+        setOtpTimer(40); // Start OTP timer
+        setError('');
+        toast.info('Account not verified. Redirecting to OTP verification.', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+        });
+        // Automatically send OTP under the hood
+        try {
+          console.log('Resending OTP for phone:', formData.phone);
+          await resendSignupOTP(formData.phone);
+          console.log('OTP resent successfully');
+        } catch (otpError) {
+          console.error('Failed to resend OTP:', otpError);
+        }
+      } else {
+        setError(error.message);
+        toast.error(error.message, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+        });
+      }
     } finally {
       setLoading(false);
     }

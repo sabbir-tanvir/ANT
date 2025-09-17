@@ -143,21 +143,28 @@ export default function Myorders() {
 			)}
 
 			<div className="flex items-center justify-between mt-4">
-				<button
-					disabled={page === 1}
-					onClick={() => setPage((p) => Math.max(1, p - 1))}
-					className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					Previous
-				</button>
-				<span className="px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg">Page {page}</span>
-				<button
-					disabled={!next}
-					onClick={() => setPage((p) => p + 1)}
-					className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					Next
-				</button>
+				<div className="text-xs text-gray-600">
+					{count} orders
+				</div>
+				<div className="flex items-center space-x-1">
+					<button
+						disabled={page === 1}
+						onClick={() => setPage((p) => Math.max(1, p - 1))}
+						className="w-8 h-8 flex items-center justify-center text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						‹
+					</button>
+					<span className="px-3 py-1.5 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg min-w-[3rem] text-center">
+						{page}
+					</span>
+					<button
+						disabled={!next}
+						onClick={() => setPage((p) => p + 1)}
+						className="w-8 h-8 flex items-center justify-center text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						›
+					</button>
+				</div>
 			</div>
 		</div>
 	);

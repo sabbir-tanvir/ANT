@@ -489,6 +489,8 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
           <div className="md:w-72 w-full md:min-h-[640px] bg-neutral-50 rounded-xl p-5 flex flex-col">
+
+            <div className='flex flex-row md:flex-col md:items-center gap-4 md:gap-3 '>
             <div className="relative group mb-4">
               <div className="w-32 h-32 md:w-full md:h-auto aspect-square bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border border-gray-200 mx-auto md:mx-0">
                 <img
@@ -525,9 +527,14 @@ export default function Profile() {
                 <p className="text-xs text-green-600 mt-1 text-center">New image selected (will save on update)</p>
               )}
             </div>
+            <div>
             <div className="mb-1 text-black text-lg font-bold leading-tight truncate text-center md:text-left">{profile?.name || 'User'}</div>
             <div className="text-stone-700 text-sm mb-1 text-center md:text-left">{user?.role ? user.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Customer'}</div>
             <div className="text-stone-500 text-xs mb-4 text-center md:text-left">{profile?.phone || formData.phone}</div>
+
+            </div>
+            </div>
+
             <div className="flex flex-row md:flex-col gap-1 mt-2 flex-1 overflow-x-auto md:overflow-visible no-scrollbar">
               {sidebarItems.map(item => (
                 <button
@@ -540,19 +547,11 @@ export default function Profile() {
                 </button>
               ))}
             </div>
-            <div className="mt-6 md:mt-auto">
-              <button
-                onClick={handleLogout}
-                className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 rounded-lg flex items-center justify-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" /></svg>
-                Logout
-              </button>
-            </div>
+
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 md:mt-0 mt-6 md:pr-6">
+          <div className="flex-1 md:mt-0 mt-2 md:pr-6">
             {activeSection === 'account' && (
               <>
                 {/* Page Title */}
