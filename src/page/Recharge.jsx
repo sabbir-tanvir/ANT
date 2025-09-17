@@ -443,7 +443,7 @@ export default function Recharge() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Payment Description</label>
                 <input
-                  type="text"
+                  type="text" 
                   name="trxName"
                   value={cashInForm.trxName}
                   onChange={onCashInChange}

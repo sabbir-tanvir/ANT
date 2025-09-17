@@ -19,6 +19,8 @@ export async function fetchSiteSettings(force = false) {
 		.get(`${Api_Base_Url}/api/business-settings/`)
 		.then((res) => {
 			cachedSettings = res.data || {};
+			console.log('[SiteSettings] fetched', cachedSettings);
+			
 			// Apply favicon if available
 			applyFavicon(cachedSettings?.favicon);
 			notify();

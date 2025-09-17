@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   storeTokens,
   getUserRole,
@@ -686,7 +686,9 @@ export default function Auth() {
             {activeTab === 'signup' && signupStep === 'form' && (
               <div className="justify-start text-center sm:text-left">
                 <span className="text-stone-500 text-xs font-normal font-['Inter']">By continuing, you agree to Safe's </span>
+                <Link to="/terms" target="" rel="noopener noreferrer">
                 <span className="text-black text-xs font-normal font-['Inter'] underline cursor-pointer">Terms and Conditions</span>
+                </Link>
               </div>
             )}
           </div>

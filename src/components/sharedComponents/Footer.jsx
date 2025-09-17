@@ -65,14 +65,14 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-gray-700 text-sm">
           <p>© {settings?.copyright_text || 'ant.com. All rights reserved.'}</p>
           <div className="flex items-center gap-6">
-            <Link to="#" className="hover:text-green-600">Terms & conditions</Link>
-            <Link to="#" className="hover:text-green-600">Privacy policy</Link>
+            <Link to="/terms" className="hover:text-green-600">Terms & conditions</Link>
+            <Link to="/privacy" className="hover:text-green-600">Privacy policy</Link>
           </div>
         </div>
 
         {/* Bengali credit line */}
         <div className="mt-3 w-full text-center text-black text-lg font-normal font-['Hind_Siliguri']">
-          প্রযুক্তিক সহযোগিতায়: GenzSoft.Cloud
+          {settings.footer_text}
           
         </div>
       </div>

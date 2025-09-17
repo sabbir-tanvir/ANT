@@ -15,6 +15,8 @@ import ProductDetails from "../page/ProductDetails";
 import Myshop from "../page/Myshop";
 import ViewInShop from "../page/ViewInShop";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
+import TermsCon from "../page/TermsCon";
+import ProvacyPolicy from "../page/ProvacyPolicy";
 
 
 export const router = createBrowserRouter([
@@ -50,6 +52,8 @@ export const router = createBrowserRouter([
   { path: "/contact", element: <Contact /> },
   { path: "/auth", element: <Auth /> },
   { path: "/profile", element: <Profile /> },
+  { path: "/terms", element: <TermsCon /> },
+  { path: "/privacy", element: <ProvacyPolicy /> },
     ]
   }
 ]);

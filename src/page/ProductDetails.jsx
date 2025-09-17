@@ -693,7 +693,7 @@ export default function ProductDetails() {
                                             onClick={startShopScanner}
                                             className="w-full cursor-pointer py-3 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700"
                                         >
-                                            BUY NOW
+                                            SCAN SHOP
                                         </button>
                                         <button
                                             type="button"

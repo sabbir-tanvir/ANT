@@ -288,7 +288,6 @@ export default function Training() {
                     brand={product.brand}
                     category={product.category}
                     to={`/product/${product.id}`}
-                    showOrderButton={currentUser?.role === 'shop_owner'}
                     onOrder={handleOrder}
                     product={product}
                   />
@@ -306,7 +305,6 @@ export default function Training() {
                     category={product.category}
                     description={product.description}
                     to={`/product/${product.id}`}
-                    showOrderButton={currentUser?.role === 'shop_owner'}
                     onOrder={handleOrder}
                     product={product}
                   />
@@ -332,54 +330,7 @@ export default function Training() {
         )}
       </div>
 
-      {/* Order Modal */}
-      {showOrderModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">Place Order</h3>
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Course:</p>
-              <p className="font-medium">{selectedProduct.name}</p>
-            </div>
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Price per unit:</p>
-              <p className="font-medium">৳{selectedProduct.price}</p>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantity:
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={orderQuantity}
-                onChange={(e) => setOrderQuantity(parseInt(e.target.value) || 1)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 mb-2">Total:</p>
-              <p className="text-xl font-bold text-green-600">৳{(selectedProduct.price * orderQuantity).toFixed(2)}</p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowOrderModal(false)}
-                disabled={orderLoading}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitOrder}
-                disabled={orderLoading}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-              >
-                {orderLoading ? 'Placing...' : 'Place Order'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </section>
   );
 }

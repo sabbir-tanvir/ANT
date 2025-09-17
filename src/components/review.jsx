@@ -40,9 +40,7 @@ export default function Review() {
           </div>
         )}
 
-        <div className="mt-8 flex justify-center">
-          <a href="#" className="text-xs font-bold text-zinc-900 border-b border-zinc-900">See all stories</a>
-        </div>
+        
       </div>
     </section>
   );
